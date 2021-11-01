@@ -2,7 +2,9 @@
 #define VECTOR_DEF
 #include <array>
 #include <string>
+#include <cmath>
 #include <iostream>
+#include <sstream>
 
 namespace aline {
 	template <typename T, std::size_t N>
@@ -62,32 +64,49 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	T norm(const Vector<T, N>& v) {
-		return v[0];
+		return sqrt(sq_norm(v));
 	}
 
 	template <typename T, std::size_t N>
 	T sq_norm(const Vector<T, N>& v) {
-		return v[0];
+		T result;
+		for (int i = 0; i < N; ++i)
+			result = result + v[i] * v[i];
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> cross(const Vector<T, N>& v1, const Vector<T, N>& v2) {
-		return Vector<T, N>();
+		if (N < 3)
+			throw std::runtime_error("Vector less than 3 elements");
+
+		T e1 = v1[1] * v2[2] - v1[2] * v2[1];
+		T e2 = v1[2] * v2[0] - v1[0] * v2[2];
+		T e3 = v1[0] * v2[1] - v1[1] * v2[0];
+
+		return Vector<T, N> { e1, e2, e3 };
 	}
 
 	template <typename T, std::size_t N>
 	T dot(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		return v1[0];
+		T result;
+		for (int i = 0; i < N; ++i)
+			result += v1[i] * v2[i];
+
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	bool isnan(const Vector<T,N>& v) {
+		for (int i = 0; i < N; ++i)
+			if (std::isnan(v[i]))
+				return true;
 		return false;
 	}
 
 	template <typename T, std::size_t N>
 	bool is_unit(const Vector<T, N>& v) {
-		return false;
+		return round(norm(v)) == 1;
 	}
 
 	template <typename T, std::size_t N>
@@ -97,66 +116,90 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	bool operator==(const Vector<T, N>& v1, const Vector<T, N>& v2) {
-		return false;
+		for (int i = 0; i < N; ++i)
+			if (v1[i] != v2[i])
+				return false;
+		return true;
 	}
 
 	template <typename T, std::size_t N>
 	bool operator!=(const Vector<T, N>& v1, const Vector<T, N>& v2) {
-		return false;
+		return !(v1 == v2);
 	}
 
 	template <typename T, std::size_t N>
 	std::ostream& operator<<(std::ostream &out, const Vector<T, N> v) {
-		out << "{ " << v[0];
-		for (int i = 1; i < N; ++i)
-			out << ", " << v[i];
-		out << " }" << std::endl;
+		out << to_string(v) << std::endl;
 		return out;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator+(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		return Vector<T, N>();
+		Vector<T, N> result;
+		for (int i = 0; i < N; ++i)
+			result[i] = v1[i] + v2[i];
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator-(const Vector<T, N> &v) {
-		return Vector<T, N>();
+		return (T)-1 * v;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator-(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		return Vector<T, N>();
+		Vector<T, N> result;
+		for (int i = 0; i < N; ++i)
+			result[i] = v1[i] - v2[i];
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator*(const T& scalar, const Vector<T, N>& v) {
-		return Vector<T, N>();
+		Vector<T, N> result;
+		for (int i = 0; i < N; ++i)
+			result[i] = scalar * v[i];
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator*(const Vector<T, N>& v, const T& scalar) {
-		return Vector<T, N>();
+		return scalar * v;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator*(const Vector<T, N>& v1, const Vector<T, N>& v2) {
-		return Vector<T, N>();
+		Vector<T, N> result;
+		for (int i = 0; i < N; ++i)
+			result[i] = v1[i] * v2[i];
+		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator/(const Vector<T, N>& v, const T& s) {
-		return Vector<T, N>();
+		if (round(s) == 0) {
+			Vector<T, N> r;
+			for (int i = 0; i < N; ++i)
+				r[i] = NAN;
+			return r;
+		}
+		else
+			return (1/s) * v;
 	}
 
 	template <typename T, std::size_t N>
 	std::string to_string(const Vector<T, N>& v) {
-		return "";
+		std::stringstream res;
+		res << "{ " << v[0];
+		for (int i = 1; i < N; ++i)
+			res << ", " << v[i];
+		res << " }";
+		return res.str();
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> unit_vector(const Vector<T, N>& v) {
-		return Vector<T, N>();
+		return v / norm(v);
 	}
 }
 
