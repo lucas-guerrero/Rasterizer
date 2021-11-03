@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 
 namespace aline {
@@ -59,8 +60,6 @@ namespace aline {
 			return *this;
 		}
 	};
-
-	// TODO à completer et envoyer mail o prof pour savoir si il faut suivre les le sujet ou les tests avec exemple de la norm
 
 	template <typename T, std::size_t N>
 	T norm(const Vector<T, N>& v) {
@@ -129,7 +128,7 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	std::ostream& operator<<(std::ostream &out, const Vector<T, N> v) {
-		out << to_string(v) << std::endl;
+		out << to_string(v);
 		return out;
 	}
 
@@ -190,10 +189,10 @@ namespace aline {
 	template <typename T, std::size_t N>
 	std::string to_string(const Vector<T, N>& v) {
 		std::stringstream res;
-		res << "{ " << v[0];
+		res << std::fixed << std::setprecision(6) << "(" << v[0];
 		for (int i = 1; i < N; ++i)
 			res << ", " << v[i];
-		res << " }";
+		res << ")";
 		return res.str();
 	}
 
