@@ -91,7 +91,6 @@ namespace aline {
 		T result;
 		for (int i = 0; i < N; ++i)
 			result += v1[i] * v2[i];
-
 		return result;
 	}
 
@@ -127,7 +126,7 @@ namespace aline {
 	}
 
 	template <typename T, std::size_t N>
-	std::ostream& operator<<(std::ostream &out, const Vector<T, N> v) {
+	std::ostream& operator<<(std::ostream &out, const Vector<T, N>& v) {
 		out << to_string(v);
 		return out;
 	}

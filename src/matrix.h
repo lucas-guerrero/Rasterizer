@@ -71,12 +71,18 @@ namespace aline {
 
 	template <typename T, std::size_t M, std::size_t N>
 	bool isnan(const Matrix<T, M, N>& m) {
+		for (int l = 0; l < M; ++l)
+			if (isnan(m[l]))
+				return true;
 		return false;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
 	bool operator==(const Matrix<T, M, N>& m1, const Matrix<T, M, N>& m2) {
-		return false;
+		for (int l = 0; l < M; ++l)
+			if (m1[l] != m2[l])
+				return false;
+		return true;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
@@ -90,14 +96,17 @@ namespace aline {
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
-	std::ostream& operator<<(std::ostream& out, const Matrix<T, M, N> m) {
+	std::ostream& operator<<(std::ostream& out, const Matrix<T, M, N>& m) {
 		out << to_string(m) << std::endl;
 		return out;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> operator+(const Matrix<T, M, N>& m1, const Matrix<T, M, N>& m2) {
-		return Matrix<T, M, N>();
+		Matrix<T, M, N> result;
+		for (int l = 0; l < M; ++l)
+			result[l] = m1[l] + m2[l];
+		return result;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
@@ -112,22 +121,41 @@ namespace aline {
 
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> operator*(const T& scalar, const Matrix<T, M, N>& m) {
-		return Matrix<T, M, N>();
+		Matrix<T, M, N> result;
+		for (int l = 0; l < M; ++l)
+			result[l] = m[l] * scalar;
+		return result;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> operator*(const Matrix<T, M, N>& m, const T& scalar) {
-		return Matrix<T, M, N>();
+		return scalar * m;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
 	Vector<T, M> operator*(const Matrix<T, M, N>& m, const Vector<T,N>& vector) {
-		return Vector<T, M>();
+		Vector<T, M> result;
+		for (int l = 0; l < M; ++l) {
+			T t = T();
+			for (int c = 0; c < N; ++c)
+				t += m[l][c] * vector[c];
+			result[l] = t;
+		}
+		return result;
 	}
 
 	template <typename T, std::size_t M, std::size_t N, std::size_t O>
 	Matrix<T, M, O> operator*(const Matrix<T, M, N>& m1, const Matrix<T, N, O>& m2) {
-		return Matrix<T, M, O>();
+		Matrix<T, M, O> result;
+		for (int l1 = 0; l1 < M; ++l1) {
+			for (int c2 = 0; c2 < O; ++c2) {
+				T t = T();
+				for (int n = 0; n < N; ++n)
+					t += m1[l1][n] * m2[n][c2];
+				result[l1][c2] = t;
+			}
+		}
+		return result;
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
@@ -144,7 +172,7 @@ namespace aline {
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
-	std::string to_string(const Matrix<T, M, N> m) {
+	std::string to_string(const Matrix<T, M, N>& m) {
 		std::stringstream ss;
 		ss << "(" << m[0];
 		for (int i = 1; i < M; ++i)
@@ -154,8 +182,12 @@ namespace aline {
 	}
 
 	template <typename T, std::size_t M, std::size_t N>
-	Matrix<T, M, N> transpose(const Matrix<T, M, N>& m) {
-		return Matrix<T, M, N>();
+	Matrix<T, N, M> transpose(const Matrix<T, M, N>& m) {
+		Matrix<T, N, M> result;
+		for (int l = 0; l < M; ++l)
+			for (int c = 0; c < N; ++c)
+				result[c][l] = m[l][c];
+		return result;
 	}
 }
 
