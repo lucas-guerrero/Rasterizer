@@ -8,13 +8,13 @@
 #include <sstream>
 
 namespace aline {
+
 	template <typename T, std::size_t N>
 	class Vector {
 		std::array<T, N> vector;
 	public:
-		Vector() {
-			vector = std::array<T, N>();
-		}
+
+		Vector() { vector = std::array<T, N>(); }
 
 		Vector(std::initializer_list<T> list) {
 			if (list.size() > N)
@@ -30,7 +30,6 @@ namespace aline {
 
 		Vector(const Vector<T, N>& v) {
 			vector = std::array<T, N>();
-
 			for (std::size_t i = 0; i < N; ++i)
 				vector[i] = v[i];
 		}
@@ -110,9 +109,10 @@ namespace aline {
 		const float epsilon = std::numeric_limits<float>::epsilon();
 		for (std::size_t i = 0; i < N; ++i) {
 			T dif = std::abs(v1[i] - v2[i]);
+
 			T max = v1[i];
-			if (v2[i] > max)
-				max = v2[i];
+			if (v2[i] > max) max = v2[i];
+
 			if (dif/max > epsilon) 
 				return false;
 
