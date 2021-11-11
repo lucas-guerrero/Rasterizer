@@ -368,7 +368,7 @@ int test_transpose()
 int main()
 {
     int failures { 0 };
-
+    /*
     failures += test_constructors();
     failures += test_at();
     failures += test_operator_subscript();
@@ -387,6 +387,18 @@ int main()
     failures += test_transpose();
 
     failures += test_operator_output();
+    */
+
+    Matrix<double, 3, 3> m = {
+        {2, 3, 8},
+        {6, 0, -3},
+        {-1, 3, 2}
+    };
+
+    Matrix<double, 3, 3> inv = inverse(m);
+
+    std::cout << m << std::endl;
+    std::cout << inv << std::endl;
 
     if( failures > 0 )
     {

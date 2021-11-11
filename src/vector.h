@@ -31,7 +31,7 @@ namespace aline {
 		Vector(const Vector<T, N>& v) {
 			vector = std::array<T, N>();
 
-			for (int i = 0; i < N; ++i)
+			for (std::size_t i = 0; i < N; ++i)
 				vector[i] = v[i];
 		}
 
@@ -43,8 +43,6 @@ namespace aline {
 		}
 
 		T operator[](std::size_t id) const {
-			if (id >= N)
-				return vector[0];
 			return vector[id];
 		}
 
@@ -55,7 +53,7 @@ namespace aline {
 		}
 
 		Vector<T, N>& operator+=(const Vector<T, N>& v) {
-			for (int i = 0; i < N; ++i)
+			for (std::size_t i = 0; i < N; ++i)
 				vector[i] += v[i];
 			return *this;
 		}
@@ -68,8 +66,8 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	T sq_norm(const Vector<T, N>& v) {
-		T result;
-		for (int i = 0; i < N; ++i)
+		T result = T();
+		for (std::size_t i = 0; i < N; ++i)
 			result = result + v[i] * v[i];
 		return result;
 	}
@@ -88,15 +86,15 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	T dot(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		T result;
-		for (int i = 0; i < N; ++i)
+		T result = T();
+		for (std::size_t i = 0; i < N; ++i)
 			result += v1[i] * v2[i];
 		return result;
 	}
 
 	template <typename T, std::size_t N>
 	bool isnan(const Vector<T,N>& v) {
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			if (std::isnan(v[i]))
 				return true;
 		return false;
@@ -109,12 +107,22 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	bool nearly_equal(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		return false;
+		const float epsilon = std::numeric_limits<float>::epsilon();
+		for (std::size_t i = 0; i < N; ++i) {
+			T dif = std::abs(v1[i] - v2[i]);
+			T max = v1[i];
+			if (v2[i] > max)
+				max = v2[i];
+			if (dif/max > epsilon) 
+				return false;
+
+		}
+		return true;
 	}
 
 	template <typename T, std::size_t N>
 	bool operator==(const Vector<T, N>& v1, const Vector<T, N>& v2) {
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			if (v1[i] != v2[i])
 				return false;
 		return true;
@@ -134,7 +142,7 @@ namespace aline {
 	template <typename T, std::size_t N>
 	Vector<T, N> operator+(const Vector<T, N> &v1, const Vector<T, N> &v2) {
 		Vector<T, N> result;
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			result[i] = v1[i] + v2[i];
 		return result;
 	}
@@ -147,7 +155,7 @@ namespace aline {
 	template <typename T, std::size_t N>
 	Vector<T, N> operator-(const Vector<T, N> &v1, const Vector<T, N> &v2) {
 		Vector<T, N> result;
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			result[i] = v1[i] - v2[i];
 		return result;
 	}
@@ -155,7 +163,7 @@ namespace aline {
 	template <typename T, std::size_t N>
 	Vector<T, N> operator*(const T& scalar, const Vector<T, N>& v) {
 		Vector<T, N> result;
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			result[i] = scalar * v[i];
 		return result;
 	}
@@ -168,17 +176,17 @@ namespace aline {
 	template <typename T, std::size_t N>
 	Vector<T, N> operator*(const Vector<T, N>& v1, const Vector<T, N>& v2) {
 		Vector<T, N> result;
-		for (int i = 0; i < N; ++i)
+		for (std::size_t i = 0; i < N; ++i)
 			result[i] = v1[i] * v2[i];
 		return result;
 	}
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator/(const Vector<T, N>& v, const T& s) {
-		if (round(s) == 0) {
+		if (s == 0) {
 			Vector<T, N> r;
-			for (int i = 0; i < N; ++i)
-				r[i] = NAN;
+			for (std::size_t i = 0; i < N; ++i)
+				r[i] = (T) NAN;
 			return r;
 		}
 		else
@@ -189,7 +197,7 @@ namespace aline {
 	std::string to_string(const Vector<T, N>& v) {
 		std::stringstream res;
 		res << std::fixed << std::setprecision(6) << "(" << v[0];
-		for (int i = 1; i < N; ++i)
+		for (std::size_t i = 1; i < N; ++i)
 			res << ", " << v[i];
 		res << ")";
 		return res.str();
