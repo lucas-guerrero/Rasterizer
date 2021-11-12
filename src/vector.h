@@ -1,5 +1,4 @@
-#ifndef VECTOR_DEF
-#define VECTOR_DEF
+#pragma once
 #include <array>
 #include <string>
 #include <cmath>
@@ -208,6 +207,3 @@ namespace aline {
 		return v / norm(v);
 	}
 }
-
-
-#endif // !VECTOR_DEF

@@ -1,5 +1,4 @@
-#ifndef MATRIX_DEF
-#define MATRIX_DEF
+#pragma once
 #include "vector.h"
 
 namespace aline {
@@ -64,8 +63,6 @@ namespace aline {
 
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> inverse(const Matrix<T, M, N>& m) {
-		if(M != N)
-			throw std::runtime_error("Matrix is not Square");
 		Matrix<T, M, N> mPrime = Matrix<T, M, N>(m);
 		// Création de la matrice identité pour faire le pivot de Gauss-Jordan
 		Matrix<T, M, N> id = Matrix<T, M, N>();
@@ -84,8 +81,10 @@ namespace aline {
 				}
 			}
 			
-			if(valueMax == 0)
-				throw std::runtime_error("Matrix is not invertible");
+			if (valueMax == 0) {
+				id[rowMax][id] = (T)NAN;
+				return id;
+			}
 			// Changement des lignes si besoin
 			if (j != rowMax) {
 				std::swap(mPrime[j], mPrime[rowMax]);
@@ -236,5 +235,3 @@ namespace aline {
 		return result;
 	}
 }
-
-#endif // !MATRIX_DEF
