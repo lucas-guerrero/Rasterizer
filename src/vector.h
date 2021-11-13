@@ -184,13 +184,6 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	Vector<T, N> operator/(const Vector<T, N>& v, const T& s) {
-		if (s == 0) {
-			Vector<T, N> r;
-			for (std::size_t i = 0; i < N; ++i)
-				r[i] = (T) NAN;
-			return r;
-		}
-		else
 			return (1/s) * v;
 	}
 

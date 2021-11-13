@@ -205,14 +205,6 @@ namespace aline {
 
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> operator/(const Matrix<T, M, N>& m, const T& scalar) {
-		if (round(scalar) == 0) {
-			Matrix<T, M, N> r;
-			for (std::size_t l = 0; l < M; ++l)
-				for (std::size_t c = 0; c < N; ++c)
-					r[l][c] = (T)NAN;
-			return r;
-		}
-		else
 			return (1 / scalar) * m;
 	}
 
