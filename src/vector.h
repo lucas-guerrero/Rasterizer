@@ -15,11 +15,10 @@ namespace aline {
 
 		Vector() { vector = std::array<T, N>(); }
 
-		Vector(std::initializer_list<T> list) {
+		Vector(std::initializer_list<T> list): Vector() {
 			if (list.size() > N)
 				throw std::runtime_error("Initializer element more than " + N);
 
-			vector = std::array<T, N>();
 			int id = 0;
 			for (const T i : list) {
 				vector[id] = i;
@@ -27,8 +26,7 @@ namespace aline {
 			}
 		}
 
-		Vector(const Vector<T, N>& v) {
-			vector = std::array<T, N>();
+		Vector(const Vector<T, N>& v): Vector() {
 			for (std::size_t i = 0; i < N; ++i)
 				vector[i] = v[i];
 		}
@@ -56,7 +54,12 @@ namespace aline {
 			return *this;
 		}
 	};
-
+/*
+	using uint = unsigned int;
+	using real = double;
+	using Vec2i = Vector<int, 2>;
+	using Vec2r = Vector<real, 2>;
+*/
 	template <typename T, std::size_t N>
 	T norm(const Vector<T, N>& v) {
 		return sqrt(sq_norm(v));
@@ -100,19 +103,18 @@ namespace aline {
 
 	template <typename T, std::size_t N>
 	bool is_unit(const Vector<T, N>& v) {
-		return round(norm(v)) == 1;
+		return round(norm(v)) == (T)1;
 	}
 
 	template <typename T, std::size_t N>
 	bool nearly_equal(const Vector<T, N> &v1, const Vector<T, N> &v2) {
-		const float epsilon = std::numeric_limits<float>::epsilon();
+		const T epsilon = std::numeric_limits<T>::epsilon();
 		for (std::size_t i = 0; i < N; ++i) {
 			T dif = std::abs(v1[i] - v2[i]);
 
-			T max = v1[i];
-			if (v2[i] > max) max = v2[i];
+			T max = std::max(v1[i], v2[i]);
 
-			if (dif/max > epsilon) 
+			if (dif / max > epsilon)
 				return false;
 
 		}
