@@ -14,6 +14,7 @@ BIN_DIR := bin
 SRC_DIR := src
 OBJ_DIR := build
 TEST_SRC_DIR := test
+HRD_DIR := include
 
 # Minwin directories .
 MINWIN_DIR := minwin
@@ -29,33 +30,43 @@ LIB_EXT := so
 # Compiler and options.
 CC = g++
 CDEBUG = -g
-INC := -Isrc/
+INC := -I$(HRD_DIR) -I$(MINWIN_HRD_DIR) $(shell sdl2-config --cflags)
 LIBS := 
 CFLAGS = -std=c++14 -fPIC -Wall -Wextra -O $(CDEBUG) $(INC)
 LDFLAGS = -g
 
 
+# find all file cpp
+FILE_SRC := $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
+FILE_OBJ   := $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(FILE_SRC:.$(SRC_EXT)=.$(OBJ_EXT)))
+
+
 # Generate executable test files.
 .PHONY: all
-all: 
+all: Minwin $(FILE_OBJ)
+
+Minwin:
 	cd minwin && make
 
-
 .PHONY: test
-test: minwin_test
+test: bin/rasterise
 
+bin/rasterise: build/rasterise.o $(FILE_OBJ) | bin
+	g++ -Lminwin/bin -g -o $@ $^ -lminwin
 
-minwin_test: minwin_test.o | bin
-	g++ -Lminwin/bin -g -o bin/$@ build/$^ -lminwin
+build/rasterise.o: test/rasterise.cpp | build
+	g++ -c -std=c++14 -fPIC -Wall -Wextra -O $(CDEBUG) -o $@ $^ -I$(HRD_DIR) -I$(MINWIN_HRD_DIR) $(shell sdl2-config --cflags)
 
-bin:
+$(OBJ_DIR):
 	mkdir -p $@
 
-minwin_test.o: test/test_minwin.cpp | build
-	g++ -c -std=c++14 -fPIC -Wall -Wextra -O $(CDEBUG) -o build/$@ $^ -I$(MINWIN_HRD_DIR) $(shell sdl2-config --cflags)
-
-build:
+$(BIN_DIR):
 	mkdir -p $@
+
+$(FILE_OBJ): $(OBJ_DIR)/%.$(OBJ_EXT) : $(SRC_DIR)/%.$(SRC_EXT)
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(FILE_OBJ): | $(OBJ_DIR)
 
 # Cleaning.
 .PHONY: clean

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <limits>
 
 namespace aline {
 
@@ -54,12 +55,12 @@ namespace aline {
 			return *this;
 		}
 	};
-/*
+
 	using uint = unsigned int;
 	using real = double;
 	using Vec2i = Vector<int, 2>;
 	using Vec2r = Vector<real, 2>;
-*/
+
 	template <typename T, std::size_t N>
 	T norm(const Vector<T, N>& v) {
 		return sqrt(sq_norm(v));
