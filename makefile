@@ -1,7 +1,7 @@
 #
 # File       : makefile
 # Licence    : see LICENCE
-# Maintainer : <your name here>
+# Maintainer : Lucas GUERRERO
 #
 
 # Shell program used.
@@ -15,62 +15,52 @@ SRC_DIR := src
 OBJ_DIR := build
 TEST_SRC_DIR := test
 
+# Minwin directories .
+MINWIN_DIR := minwin
+MINWIN_SRC_DIR := $(MINWIN_DIR)/$(SRC_DIR)
+MINWIN_HRD_DIR := $(MINWIN_DIR)/include
+OBJ_DIR_MINWIN := $(MINWIN_DIR)/$(OBJ_DIR)
+
 # File extensions.
 SRC_EXT := cpp
 OBJ_EXT := o
+LIB_EXT := so
 
 # Compiler and options.
 CC = g++
 CDEBUG = -g
-OS := $(shell uname)
-ifeq ($(OS), Linux)
-    INC := -Isrc/
-    LIBS := 
-else ifeq ($(OS), Darwin)
-    INC := -Isrc/
-    LIBS := 
-endif
-CFLAGS = -std=c++11 -Wall -O $(CDEBUG) $(INC)
+INC := -Isrc/
+LIBS := 
+CFLAGS = -std=c++14 -fPIC -Wall -Wextra -O $(CDEBUG) $(INC)
 LDFLAGS = -g
 
-# Find all source file names.
-SRC_FILES := $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
-# Generate object file names from source file names.
-OBJ_FILES := $(patsubst $(SRC_DIR)/%.$(SRC_EXT), $(OBJ_DIR)/%.$(OBJ_EXT), $(SRC_FILES))
-# Find all test source file names.
-TEST_SRC_FILES := $(wildcard $(TEST_SRC_DIR)/*.$(SRC_EXT))
-# Generate test object file names from test source file names.
-TEST_OBJ_FILES := $(patsubst $(TEST_SRC_DIR)/%.$(SRC_EXT), $(OBJ_DIR)/%.$(OBJ_EXT), $(TEST_SRC_FILES))
-# Generate test binary file names from test source file names.
-TEST_BIN_FILES := $(patsubst $(TEST_SRC_DIR)/%.$(SRC_EXT), $(BIN_DIR)/%, $(TEST_SRC_FILES))
-
-$(OBJ_FILES): $(OBJ_DIR)/%.$(OBJ_EXT): $(SRC_DIR)/%.$(SRC_EXT)
-	mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
 
 # Generate executable test files.
 .PHONY: all
-all: $(TEST_BIN_FILES)
+all: 
+	cd minwin && make
 
-# Create test_vector
-$(BIN_DIR)/test_vector: $(OBJ_DIR)/test_vector.o
-	mkdir -p $(BIN_DIR)
-	$(CC) $^ $(LDFLAGS) -o $@
 
-# Create test_matrix
-$(BIN_DIR)/test_matrix: $(OBJ_DIR)/test_matrix.o
-	mkdir -p $(BIN_DIR)
-	$(CC) $^ $(LDFLAGS) -o $@
+.PHONY: test
+test: minwin_test
 
-$(TEST_OBJ_FILES): $(OBJ_DIR)/%.$(OBJ_EXT): $(TEST_SRC_DIR)/%.$(SRC_EXT) 
-	mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+
+minwin_test: minwin_test.o | bin
+	g++ -Lminwin/bin -g -o bin/$@ build/$^ -lminwin
+
+bin:
+	mkdir -p $@
+
+minwin_test.o: test/test_minwin.cpp | build
+	g++ -c -std=c++14 -fPIC -Wall -Wextra -O $(CDEBUG) -o build/$@ $^ -I$(MINWIN_HRD_DIR) $(shell sdl2-config --cflags)
+
+build:
+	mkdir -p $@
 
 # Cleaning.
 .PHONY: clean
 clean:
-	$(RM) $(BIN_FILE)
-	$(RM) $(OBJ_FILES)
-	$(RM) $(TEST_BIN_FILES)
-	$(RM) $(TEST_OBJ_FILES)
+	$(RM) -r $(BIN_DIR)
+	$(RM) -r $(OBJ_DIR)
+	cd minwin && make clean
 
