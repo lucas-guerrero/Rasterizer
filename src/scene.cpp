@@ -24,7 +24,6 @@ void Scene::run() {
         windows.process_input();
 
         windows.clear();
-        windows.set_draw_color(minwin::white);
         
         for(uint i = 0; i<shapes.size(); ++i) {
             std::vector<Vertex> vertices = shapes[i].get_vertices();
@@ -32,6 +31,8 @@ void Scene::run() {
 
             for(uint j=0; j<faces.size(); ++j) {
                 Face f = faces[j];
+
+                windows.set_draw_color(f.color);
 
                 Vec2r p1 = vertices[f.idP1].point;
                 Vec2r p2 = vertices[f.idP2].point;
@@ -76,6 +77,13 @@ void Scene::draw_wireframe_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2
     draw_line(v3, v1);
 }
 
+void print(const std::vector<uint> &v) {
+    for(const auto elm: v) {
+        std::cout << elm << ", ";
+    }
+    std::cout << std::endl;
+}
+
 void Scene::draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const {
     Vec2i p0 = Vec2i(v1);
     Vec2i p1 = Vec2i(v2);
@@ -91,31 +99,32 @@ void Scene::draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
     int x0 = p0[0], x1 = p1[0], x2 = p2[0];
     int y0 = p0[1], y1 = p1[1], y2 = p2[1];
 
-    std::vector<uint> x02 = interpolation({y0, x0}, {y2, x2});
-    std::vector<uint> x01 = interpolation({y0, x0}, {y1, x1});
-    std::vector<uint> x12 = interpolation({y1, x1}, {y2, x2});
+    std::vector<uint> x02 = interpolation(y0, x0, y2, x2);
+    std::vector<uint> x01 = interpolation(y0, x0, y1, x1);
+    std::vector<uint> x12 = interpolation(y1, x1, y2, x2);
+
+
     
     x01.pop_back();
 
-    std::vector<uint> x012 = std::vector<uint>(x01);
-    for(const auto elm: x12) {
-        x012.push_back(elm);
-    }
+    x01.insert(x01.end(), x12.begin(), x12.end());
 
     std::vector<uint> x_left, x_right;
-    int m = (int)(std::floor(x012.size()/2));
-    if(x02[m] < x012[m]) {
+    int m = (int)(std::floor(x01.size()/2));
+    if(x02[m] < x01[m]) {
         x_left = x02;
-        x_right = x012;
+        x_right = x01;
     }
     else {
-        x_left = x012;
+        x_left = x01;
         x_right = x02;
     }
     
     for(int y = y0; y <= y2; ++y) {
-        for(uint x = x_left[y - y0]; x <= x_right[y - y0]; ++x)
+        int diff = y - y0;
+        for(uint x = x_left[diff]; x <= x_right[diff]; ++x) {
             windows.put_pixel(x, y);
+        }
     }
 }
 
@@ -125,47 +134,24 @@ real sign(const int value) {
     return 1;
 }
 
-
-std::vector<uint> Scene::interpolation(const Vec2i &v1, const Vec2i &v2) const {
-    int x0 = v1[0], y0 = v1[1], x1 = v2[0], y1 = v2[1];
-    int dx = x1 - x0, dy = y1 - y0;
+std::vector<uint> Scene::interpolation(int i0, int d0, int i1, int d1) const {
+    if(i0 == i1) return {(uint)d0};
 
     std::vector<uint> listPoint;
 
-    if(std::abs(dx) > std::abs(dy)) {
-        real a;
-        if(dx == 0)
-            a = sign(dy);
-        else {
-            if(x0 > x1) {
-                std::swap(x0, x1);
-                std::swap(y0, y1);
-            }
-            a = (real)dy/dx;
-        }
-        real y = y0;
-        for(int x = x0; x <= x1; ++x) {
-            listPoint.push_back(x);
-            y = y + a;
-        }
-    }
-    else {
-        real a;
-        if(dy == 0)
-            a = sign(dx);
-        else {
-            if(y0 > y1) {
-                std::swap(x0, x1);
-                std::swap(y0, y1);
-            }
-            a = (real)dx/dy;
-        }
-        
-        real x = x0;
-        for(int y = y0; y <= y1; ++y) {
-            listPoint.push_back((int) x);
-            x = x + a;
-        }
+    int dd = d1 - d0, di = i1 - i0;
+
+    real a = (real)dd / di;
+    real d = d0;
+
+    //std::cout << std::endl;
+    //std::cout << "i0: " << i0 << ", d0: " << d0 << ", i1: " << i1 << ", d1: " << d1 << std::endl;
+    //std::cout << "dd: " << dd << ", di: " << di << ", a: " << a << std::endl;
+
+    for(int i = i0; i <= i1; ++i){
+        listPoint.push_back(std::round(d));
+        //std::cout << "push: " << std::round(d) << std::endl;
+        d = d + a;
     }
 
     return listPoint;
@@ -238,7 +224,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
 
 void Scene::quit() { isRunning = false; }
 
-void Scene::changeMode() { mode = (mode+1) %3; }
+void Scene::changeMode() { mode = (mode+1) %2; }
 
 void Scene::shutdown() { windows.close(); }
 

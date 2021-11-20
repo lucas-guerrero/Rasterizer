@@ -36,7 +36,7 @@ private:
   void draw_line(const Vec2i &v1, const Vec2i &v2) const;
   void draw_wireframe_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const;
   void draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const;
-  std::vector<uint> interpolation(const Vec2i &v1, const Vec2i &v2) const;
+  std::vector<uint> interpolation(int i0, int d0, int i1, int d1) const;
 };
 
 class QuitButtonBehavior : public minwin::IButtonBehavior {
