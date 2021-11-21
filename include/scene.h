@@ -35,8 +35,10 @@ private:
   Vec2i canvas_to_window( const Vec2r & point ) const;
   void draw_line(const Vec2i &v1, const Vec2i &v2) const;
   void draw_wireframe_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const;
+  void draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3, real h0, real h1, real h2, const minwin::Color& color) const;
   void draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const;
   std::vector<uint> interpolation(int i0, int d0, int i1, int d1) const;
+  std::vector<real> interpolation_shaded(int i0, real h0, int i1, real h1) const;
 };
 
 class QuitButtonBehavior : public minwin::IButtonBehavior {

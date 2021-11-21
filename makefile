@@ -43,13 +43,10 @@ FILE_OBJ   := $(patsubst $(SRC_DIR)/%,$(OBJ_DIR)/%,$(FILE_SRC:.$(SRC_EXT)=.$(OBJ
 
 # Generate executable test files.
 .PHONY: all
-all: Minwin $(FILE_OBJ)
+all: Minwin $(FILE_OBJ) bin/rasterise
 
 Minwin:
 	cd minwin && make
-
-.PHONY: test
-test: bin/rasterise
 
 bin/rasterise: build/rasterise.o $(FILE_OBJ) | bin
 	g++ -Lminwin/bin -g -o $@ $^ -lminwin
