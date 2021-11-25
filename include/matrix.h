@@ -11,11 +11,10 @@ namespace aline {
 			matrix = Vector<Vector<T, N>, M>();
 		}
 
-		Matrix(std::initializer_list<Vector<T, N>> list) {
+		Matrix(std::initializer_list<Vector<T, N>> list): Matrix() {
 			if (list.size() > M)
 				throw std::runtime_error("Initializer element more than " + N);
 
-			matrix = Vector<Vector<T, N>, M>();
 			int id = 0;
 			for (const Vector<T, N> i : list) {
 				matrix[id] = i;
@@ -23,8 +22,7 @@ namespace aline {
 			}
 		}
 
-		Matrix(const Matrix<T, M, N>& m) {
-			matrix = Vector<Vector<T, N>, M>();
+		Matrix(const Matrix<T, M, N>& m): Matrix() {
 			for (std::size_t i = 0; i < M; ++i)
 				matrix[i] = m[i];
 		}
@@ -64,7 +62,7 @@ namespace aline {
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> inverse(const Matrix<T, M, N>& m) {
 		Matrix<T, M, N> mPrime = Matrix<T, M, N>(m);
-		// Création de la matrice identité pour faire le pivot de Gauss-Jordan
+		// Crï¿½ation de la matrice identitï¿½ pour faire le pivot de Gauss-Jordan
 		Matrix<T, M, N> id = Matrix<T, M, N>();
 		for (std::size_t i = 0; i < M; ++i)
 			id[i][i] = 1;
@@ -91,7 +89,7 @@ namespace aline {
 				std::swap(id[j], id[rowMax]);
 			}
 
-			// Transformation de la ligne j pour la neutralisé
+			// Transformation de la ligne j pour la neutralisï¿½
 			mPrime[j] = mPrime[j] / valueMax;
 			id[j] = id[j] / valueMax;
 

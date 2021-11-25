@@ -2,4 +2,4 @@
 
 using namespace aline;
 
-Vertex::Vertex(const Vec2r &c, real h): point(c), intensity(h) {}
+Vertex::Vertex(const Vec3r &c, real h): point(c), intensity(h) {}

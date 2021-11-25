@@ -4,9 +4,11 @@
 
 using namespace aline;
 
-int main() {
+int main(int argc, const char* argv[]) {
     Scene scene;
 
+    scene.load_data(argc, argv);
+/*
     std::vector<Vertex> listVertex {Vertex({0.6, 0}, 0)};
     std::vector<Face> listFace;
 
@@ -45,6 +47,8 @@ int main() {
     scene.add_shape(triangle);
     scene.add_shape(carre);
     scene.add_shape(cercle);
+*/
+
     scene.initialise();
     scene.run();
     scene.shutdown();

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "shape.h"
+#include "object.h"
 
 #include "color.h"
 #include "ibehavior.h"
@@ -16,14 +16,16 @@ class Scene {
   const real VIEWPORT_WIDTH = 2;
   const real VIEWPORT_HEIGHT = VIEWPORT_WIDTH * RATIO;
 
-  std::vector<Shape> shapes;
+  std::vector<Object> objects;
   minwin::Window windows;
   bool isRunning;
   uint mode = 0; // 0 = wireframe, 1 = filled, 2 = shaded
 
 public:
   Scene();
-  void add_shape(const Shape& shape);
+  void load_data( int argc, const char * argv[] );
+  void load_obj_file( const char * file_name );
+  void add_object(const Object& object);
   void initialise();
   void run();
   void quit();
@@ -31,6 +33,7 @@ public:
   void shutdown();
 
 private:
+  Vec2r perspective_projection(const Vec4r &v, real d);
   Vec2r viewport_to_canvas( const Vec2r & point ) const;
   Vec2i canvas_to_window( const Vec2r & point ) const;
   void draw_line(const Vec2i &v1, const Vec2i &v2) const;

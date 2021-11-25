@@ -5,10 +5,10 @@ namespace aline {
 
 class Vertex {
 public:
-    Vec2r point;
+    Vec3r point;
     real intensity;
 
-    Vertex(const Vec2r &c, real h);
+    Vertex(const Vec3r &c, real h);
 };
 
 }

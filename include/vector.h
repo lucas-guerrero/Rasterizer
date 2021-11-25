@@ -54,12 +54,21 @@ namespace aline {
 				vector[i] += v[i];
 			return *this;
 		}
+
+		Vector<T, N>& operator=(const Vector<T, N>& v) {
+			vector = std::array<T, N>();
+			for (std::size_t i = 0; i < N; ++i)
+				vector[i] = v[i];
+			return *this;
+		}
 	};
 
 	using uint = unsigned int;
 	using real = double;
 	using Vec2i = Vector<int, 2>;
 	using Vec2r = Vector<real, 2>;
+	using Vec3r = Vector<real, 3>;
+	using Vec4r = Vector<real, 4>;
 
 	template <typename T, std::size_t N>
 	T norm(const Vector<T, N>& v) {

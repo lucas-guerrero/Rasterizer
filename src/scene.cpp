@@ -1,10 +1,60 @@
+#include <fstream>
+#include <string>
+#include <vector>
 #include "scene.h"
 
 using namespace aline;
 
-Scene::Scene(): isRunning(true) { shapes = std::vector<Shape>(); }
+Scene::Scene(): isRunning(true) { objects = std::vector<Object>(); }
 
-void Scene::add_shape(const Shape &shape) { shapes.push_back(shape); }
+void Scene::load_data( int argc, const char * argv[] ) {
+    for(int i = 1; i<argc; ++i) {
+        std::cout << argv[i] << std::endl;
+        load_obj_file(argv[i]);
+    }
+}
+
+void Scene::load_obj_file( const char * file_name ) {
+    std::ifstream file(file_name);
+    if(file.fail())
+        throw std::runtime_error("Can't dont open the file: " + std::string(file_name));
+
+    std::string name;
+
+    std::vector<Vertex> listVertex;
+    std::vector<Face> listFace;
+
+    while(file.good()) {
+        std::string variable;
+
+        file >> variable;
+
+        if(file.fail()) break;
+
+        if(variable == "#")
+            std::getline(file, variable);
+        else if(variable == "g")
+            file >> name;
+        else if(variable == "v") {
+            real x, y, z;
+            file >> x >> y >> z;
+            listVertex.push_back(Vertex({x, y, z}, 1));
+        }
+        else if(variable == "f") {
+            uint i1, i2, i3;
+            file >> i1 >> i2 >> i3;
+            listFace.push_back(Face(i1-1, i2-1, i3-1, minwin::white));
+        }
+    }
+
+    Shape shape = Shape(name, listVertex, listFace);
+
+    add_object(Object(shape, {}, {}, {}));
+
+    file.close();
+}
+
+void Scene::add_object(const Object &object) { objects.push_back(object); }
 
 void Scene::initialise() {
     windows.set_title("Rasterizer");
@@ -16,6 +66,10 @@ void Scene::initialise() {
 
     windows.register_quit_behavior( new QuitButtonBehavior( *this ) );
     windows.register_key_behavior( minwin::KEY_SPACE, new ChangeModeBehavior( *this ) );
+
+    if( not windows.open() ) {
+        std::cerr << "Couldn't open window.\n";
+    }
 }
 
 void Scene::run() {
@@ -24,18 +78,19 @@ void Scene::run() {
 
     minwin::Text spaceText(10, 10, "Press space to change mode", minwin::white);
 
-    if( not windows.open() ) {
-        std::cerr << "Couldn't open window.\n";
-    }
-
     while(isRunning) {
         windows.process_input();
 
         windows.clear();
         
-        for(uint i = 0; i<shapes.size(); ++i) {
-            std::vector<Vertex> vertices = shapes[i].get_vertices();
-            std::vector<Face> faces = shapes[i].get_faces();
+        for(uint i = 0; i<objects.size(); ++i) {
+
+            Object o = objects[i];
+
+            Matrix<real, 4, 4> matrixTransform = o.transform();
+
+            std::vector<Vertex> vertices = o.get_vertices();
+            std::vector<Face> faces = o.get_faces();
 
             for(uint j=0; j<faces.size(); ++j) {
                 Face f = faces[j];
@@ -46,9 +101,17 @@ void Scene::run() {
                 Vertex v2 = vertices[f.idP2];
                 Vertex v3 = vertices[f.idP3];
 
-                Vec2r p1 = v1.point;
-                Vec2r p2 = v2.point;
-                Vec2r p3 = v3.point;
+                Vec4r p3_1 = Vec4r {v1.point[0], v1.point[1], v1.point[2], 1};
+                Vec4r p3_2 = Vec4r {v2.point[0], v2.point[1], v2.point[2], 1};
+                Vec4r p3_3 = Vec4r {v3.point[0], v3.point[1], v3.point[2], 1};
+
+                p3_1 = matrixTransform * p3_1;
+                p3_2 = matrixTransform * p3_2;
+                p3_3 = matrixTransform * p3_3;
+
+                Vec2r p1 = perspective_projection(p3_1, 2);
+                Vec2r p2 = perspective_projection(p3_2, 2);
+                Vec2r p3 = perspective_projection(p3_3, 2);
 
                 Vec2r canvasP1 = viewport_to_canvas(p1);
                 Vec2r canvasP2 = viewport_to_canvas(p2);
@@ -71,12 +134,21 @@ void Scene::run() {
                     modeText.set_string("Mode: Shaded");
                 }
             }
+            
         }
         windows.render_text(modeText);
         windows.render_text(spaceText);
         
         windows.display();
     }
+}
+
+Vec2r Scene::perspective_projection(const Vec4r &v, real d) {
+    real z = v[2];
+    real x = (-d/z) * v[0];
+    real y = (-d/z) * v[1];
+
+    return {x, y};
 }
 
 Vec2r Scene::viewport_to_canvas( const Vec2r & point ) const {
@@ -329,7 +401,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
 
 void Scene::quit() { isRunning = false; }
 
-void Scene::changeMode() { mode = (mode+1) %3; }
+void Scene::changeMode() { mode = 0/*(mode+1) %3*/; }
 
 void Scene::shutdown() { windows.close(); }
 
