@@ -49,7 +49,8 @@ void Scene::load_obj_file( const char * file_name ) {
 
     Shape shape = Shape(name, listVertex, listFace);
 
-    add_object(Object(shape, {}, {}, {}));
+    //add_object(Object(shape, {0, -10, -50}, {}, {0.1, 0.1, 0.1}));
+    add_object(Object(shape, {-1, -1, -5}));
 
     file.close();
 }
@@ -113,6 +114,8 @@ void Scene::run() {
                 Vec2r p2 = perspective_projection(p3_2, 2);
                 Vec2r p3 = perspective_projection(p3_3, 2);
 
+                std::cout << p3_1 << ", " << p3_2 << ", " << p3_3 << std::endl;
+
                 Vec2r canvasP1 = viewport_to_canvas(p1);
                 Vec2r canvasP2 = viewport_to_canvas(p2);
                 Vec2r canvasP3 = viewport_to_canvas(p3);
@@ -136,6 +139,10 @@ void Scene::run() {
             }
             
         }
+
+        objects[0].rotation[1] += 1;
+        //objects[0].rotation[0] += 1;
+
         windows.render_text(modeText);
         windows.render_text(spaceText);
         
@@ -401,7 +408,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
 
 void Scene::quit() { isRunning = false; }
 
-void Scene::changeMode() { mode = 0/*(mode+1) %3*/; }
+void Scene::changeMode() { mode = (mode+1) %3; }
 
 void Scene::shutdown() { windows.close(); }
 

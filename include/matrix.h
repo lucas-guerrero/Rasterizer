@@ -53,8 +53,13 @@ namespace aline {
 
 		Matrix<T, M, N>& operator+=(const Matrix<T, M, N>& m) {
 			for (std::size_t l = 0; l < M; ++l)
-				for (std::size_t c = 0; c < N; ++c)
-					matrix[l][c] += m[l][c];
+				matrix[l] += m[l];
+			return *this;
+		}
+
+		Matrix<T, M, N>& operator=(const Matrix<T, M, N>& m) {
+			for (std::size_t l = 0; l < M; ++l)
+				matrix[l] = m[l];
 			return *this;
 		}
 	};
