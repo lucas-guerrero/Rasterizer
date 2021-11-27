@@ -40,16 +40,22 @@ void Scene::load_obj_file( const char * file_name ) {
             listVertex.push_back(Vertex({x, y, z}, 1));
         }
         else if(variable == "f") {
-            uint i1, i2, i3;
-            file >> i1 >> i2 >> i3;
+            std::string s1, s2, s3;
+            file >> s1 >> s2 >> s3;
+
+            uint i1 = std::stoul(s1.substr(0, s1.find("/")));
+            uint i2 = std::stoul(s2.substr(0, s2.find("/")));
+            uint i3 = std::stoul(s3.substr(0, s3.find("/")));
+
             listFace.push_back(Face(i1-1, i2-1, i3-1, minwin::white));
         }
     }
 
     Shape shape = Shape(name, listVertex, listFace);
 
-    add_object(Object(shape, {0, -10, -50}, {}, {0.1, 0.1, 0.1}));
-    //add_object(Object(shape, {-1, -1, -5}));
+    add_object(Object(shape, {-5, -5, -50}, {}, {0.1, 0.1, 0.1}));
+
+    //add_object(Object(shape, {0, -50, -50}, {10, 50, 0}, {0.09, 0.09, 0.09}));
 
     file.close();
 }
@@ -74,9 +80,12 @@ void Scene::initialise() {
 
 void Scene::run() {
 
-    minwin::Text modeText(10, CANVAS_HEIGHT - 25, "Mode: wireframe", minwin::white);
+    modeText = minwin::Text(10, CANVAS_HEIGHT - 25, "Mode: wireframe", minwin::white);
 
     minwin::Text spaceText(10, 10, "Press space to change mode", minwin::white);
+
+    //bool deplacementX = false;
+    //bool deplacementY = false;
 
     while(isRunning) {
         windows.process_input();
@@ -85,58 +94,39 @@ void Scene::run() {
         
         for(uint i = 0; i<objects.size(); ++i) {
 
-            Object o = objects[i];
+            draw_object(objects[i]);
 
-            Matrix<real, 4, 4> matrixTransform = o.transform();
-
-            std::vector<Vertex> vertices = o.get_vertices();
-            std::vector<Face> faces = o.get_faces();
-
-            for(uint j=0; j<faces.size(); ++j) {
-                Face f = faces[j];
-
-                windows.set_draw_color(f.color);
-
-                Vertex v1 = vertices[f.idP1];
-                Vertex v2 = vertices[f.idP2];
-                Vertex v3 = vertices[f.idP3];
-
-                Vec4r p3_1 = Vec4r {v1.point[0], v1.point[1], v1.point[2], 1};
-                Vec4r p3_2 = Vec4r {v2.point[0], v2.point[1], v2.point[2], 1};
-                Vec4r p3_3 = Vec4r {v3.point[0], v3.point[1], v3.point[2], 1};
-
-                p3_1 = matrixTransform * p3_1;
-                p3_2 = matrixTransform * p3_2;
-                p3_3 = matrixTransform * p3_3;
-
-                Vec2r p1 = perspective_projection(p3_1, 2);
-                Vec2r p2 = perspective_projection(p3_2, 2);
-                Vec2r p3 = perspective_projection(p3_3, 2);
-
-                Vec2r canvasP1 = viewport_to_canvas(p1);
-                Vec2r canvasP2 = viewport_to_canvas(p2);
-                Vec2r canvasP3 = viewport_to_canvas(p3);
-
-                Vec2i point1 = canvas_to_window(canvasP1);
-                Vec2i point2 = canvas_to_window(canvasP2);
-                Vec2i point3 = canvas_to_window(canvasP3);
-
-                if(mode == 0) {
-                    draw_wireframe_triangle(point1, point2, point3);
-                    modeText.set_string("Mode: Wireframe");
-                }
-                else {
-                    draw_filled_triangle(point1, point2, point3);
-                    modeText.set_string("Mode: Filled");
-                }
-            }
-            
         }
+/*
+        std::srand(std::time(NULL));
 
-        objects[0].rotation[2] += 1;
+        objects[0].rotation[2] += 5;
         objects[0].rotation[1] += 5;
-        objects[0].rotation[0] += 1;
+        objects[0].rotation[0] += 5;
 
+        Vec3r trans = objects[0].translation;
+
+        if(trans[0] > 10)
+            deplacementX = false;
+        else if(trans[0] < -15)
+            deplacementX = true;
+
+        if(deplacementX)
+            objects[0].translation[0] += std::rand() % 5;
+        else
+            objects[0].translation[0] -= std::rand() % 5;
+
+
+        if(trans[1] > 5)
+            deplacementY = false;
+        else if(trans[1] < -20)
+            deplacementY = true;
+
+        if(deplacementY)
+            objects[0].translation[1] += std::rand() % 5;
+        else
+            objects[0].translation[1] -= std::rand() % 5;
+*/
         windows.render_text(modeText);
         windows.render_text(spaceText);
         
@@ -162,6 +152,54 @@ Vec2i Scene::canvas_to_window( const Vec2r & point ) const {
     int sX = std::round(CANVAS_WIDTH / 2 + point[0]);
     int sY = std::round(CANVAS_HEIGHT / 2 - point[1]);
     return Vec2i {sX, sY};
+}
+
+void Scene::draw_object(const Object &o) {
+    Matrix<real, 4, 4> matrixTransform = o.transform();
+
+    std::vector<Vertex> vertices = o.get_vertices();
+    std::vector<Face> faces = o.get_faces();
+
+    for(uint j=0; j<faces.size(); ++j) {
+        Face f = faces[j];
+
+        windows.set_draw_color(f.color);
+
+        Vertex v1 = vertices[f.idP1];
+        Vertex v2 = vertices[f.idP2];
+        Vertex v3 = vertices[f.idP3];
+
+        Vec4r p3_1 = Vec4r {v1.point[0], v1.point[1], v1.point[2], 1};
+        Vec4r p3_2 = Vec4r {v2.point[0], v2.point[1], v2.point[2], 1};
+        Vec4r p3_3 = Vec4r {v3.point[0], v3.point[1], v3.point[2], 1};
+
+        p3_1 = matrixTransform * p3_1;
+        p3_2 = matrixTransform * p3_2;
+        p3_3 = matrixTransform * p3_3;
+
+        //std::cout << p3_1 << ", " << p3_2 << ", " << p3_3 << std::endl;
+
+        Vec2r p1 = perspective_projection(p3_1, 2);
+        Vec2r p2 = perspective_projection(p3_2, 2);
+        Vec2r p3 = perspective_projection(p3_3, 2);
+
+        Vec2r canvasP1 = viewport_to_canvas(p1);
+        Vec2r canvasP2 = viewport_to_canvas(p2);
+        Vec2r canvasP3 = viewport_to_canvas(p3);
+
+        Vec2i point1 = canvas_to_window(canvasP1);
+        Vec2i point2 = canvas_to_window(canvasP2);
+        Vec2i point3 = canvas_to_window(canvasP3);
+
+        if(mode == 0) {
+            draw_wireframe_triangle(point1, point2, point3);
+            modeText.set_string("Mode: Wireframe");
+        }
+        else {
+            draw_filled_triangle(point1, point2, point3);
+            modeText.set_string("Mode: Filled");
+        }
+    }
 }
 
 void Scene::draw_wireframe_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const {

@@ -20,18 +20,18 @@ public:
 public:
     Object(const Shape &shape, const Vec3r &translation = {}, const Vec3r &rotation = {}, const Vec3r &scale = {1, 1, 1});
 
-    Matrix<real, 4, 4> transform();
+    Matrix<real, 4, 4> transform() const;
 
-    Matrix<real, 4, 4> matrixTranslation(const Vec3r &transl);
-    Matrix<real, 4, 4> matrixScale();
-    Matrix<real, 4, 4> matrixRotation();
+    Matrix<real, 4, 4> matrixTranslation(const Vec3r &transl) const;
+    Matrix<real, 4, 4> matrixScale() const;
+    Matrix<real, 4, 4> matrixRotation() const;
 
-    Matrix<real, 4, 4> matrixRotationX();
-    Matrix<real, 4, 4> matrixRotationY();
-    Matrix<real, 4, 4> matrixRotationZ();
+    Matrix<real, 4, 4> matrixRotationX() const;
+    Matrix<real, 4, 4> matrixRotationY() const;
+    Matrix<real, 4, 4> matrixRotationZ() const;
 
-    std::vector<Vertex> get_vertices();
-    std::vector<Face> get_faces();
+    std::vector<Vertex> get_vertices() const;
+    std::vector<Face> get_faces() const;
 };
 
 }

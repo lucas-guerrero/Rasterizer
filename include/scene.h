@@ -21,6 +21,8 @@ class Scene {
   bool isRunning;
   uint mode = 0; // 0 = wireframe, 1 = filled, 2 = shaded
 
+  minwin::Text modeText;
+
 public:
   Scene();
   void load_data( int argc, const char * argv[] );
@@ -33,6 +35,9 @@ public:
   void shutdown();
 
 private:
+
+  void draw_object(const Object& object);
+
   Vec2r perspective_projection(const Vec4r &v, real d);
   Vec2r viewport_to_canvas( const Vec2r & point ) const;
   Vec2i canvas_to_window( const Vec2r & point ) const;

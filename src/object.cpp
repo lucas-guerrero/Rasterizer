@@ -17,11 +17,11 @@ Object::Object(const Shape &shape, const Vec3r &translation, const Vec3r &rotati
         barycentre = Vec3r {x/t, y/t, z/t};
     }
 
-std::vector<Vertex> Object::get_vertices() { return shape.get_vertices(); }
+std::vector<Vertex> Object::get_vertices() const { return shape.get_vertices(); }
 
-std::vector<Face> Object::get_faces() { return shape.get_faces(); }
+std::vector<Face> Object::get_faces() const { return shape.get_faces(); }
 
-Matrix<real, 4, 4> Object::transform() {
+Matrix<real, 4, 4> Object::transform() const{
     Matrix<real, 4, 4> matrix = matrixTranslation(-barycentre);
 
     matrix = matrixScale() * matrix;
@@ -33,7 +33,7 @@ Matrix<real, 4, 4> Object::transform() {
 }
 
 
-Matrix<real, 4, 4> Object::matrixRotation() {
+Matrix<real, 4, 4> Object::matrixRotation() const{
     Matrix<real, 4, 4> matrix = matrixRotationX();
 
     matrix = matrixRotationY() * matrix;
@@ -42,7 +42,7 @@ Matrix<real, 4, 4> Object::matrixRotation() {
     return matrix;
 }
 
-Matrix<real, 4, 4> Object::matrixTranslation(const Vec3r &transl) {
+Matrix<real, 4, 4> Object::matrixTranslation(const Vec3r &transl) const{
     return Matrix<real, 4, 4> {
         {1, 0, 0, transl[0]},
         {0, 1, 0, transl[1]},
@@ -51,7 +51,7 @@ Matrix<real, 4, 4> Object::matrixTranslation(const Vec3r &transl) {
     };
 }
 
-Matrix<real, 4, 4> Object::matrixScale(){
+Matrix<real, 4, 4> Object::matrixScale() const{
     return Matrix<real, 4, 4> {
         {scale[0], 0, 0, 0},
         {0, scale[1], 0, 0},
@@ -60,7 +60,7 @@ Matrix<real, 4, 4> Object::matrixScale(){
     };
 }
 
-Matrix<real, 4, 4> Object::matrixRotationX() {
+Matrix<real, 4, 4> Object::matrixRotationX() const{
     real tmp = rotation[0]*PI /180;
     real cos = std::cos(tmp);
     real sin = std::sin(tmp);
@@ -73,7 +73,7 @@ Matrix<real, 4, 4> Object::matrixRotationX() {
     };
 }
 
-Matrix<real, 4, 4> Object::matrixRotationY() {
+Matrix<real, 4, 4> Object::matrixRotationY() const{
     real tmp = rotation[1]*PI /180;
     real cos = std::cos(tmp);
     real sin = std::sin(tmp);
@@ -86,7 +86,7 @@ Matrix<real, 4, 4> Object::matrixRotationY() {
     };
 }
 
-Matrix<real, 4, 4> Object::matrixRotationZ() {
+Matrix<real, 4, 4> Object::matrixRotationZ() const{
     real tmp = rotation[2]*PI /180;
     real cos = std::cos(tmp);
     real sin = std::sin(tmp);
