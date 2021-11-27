@@ -9,6 +9,7 @@ public:
     real intensity;
 
     Vertex(const Vec3r &c, real h);
+
 };
 
 }

@@ -9,7 +9,6 @@ Scene::Scene(): isRunning(true) { objects = std::vector<Object>(); }
 
 void Scene::load_data( int argc, const char * argv[] ) {
     for(int i = 1; i<argc; ++i) {
-        std::cout << argv[i] << std::endl;
         load_obj_file(argv[i]);
     }
 }
@@ -49,8 +48,8 @@ void Scene::load_obj_file( const char * file_name ) {
 
     Shape shape = Shape(name, listVertex, listFace);
 
-    //add_object(Object(shape, {0, -10, -50}, {}, {0.1, 0.1, 0.1}));
-    add_object(Object(shape, {-1, -1, -5}));
+    add_object(Object(shape, {0, -10, -50}, {}, {0.1, 0.1, 0.1}));
+    //add_object(Object(shape, {-1, -1, -5}));
 
     file.close();
 }
@@ -114,8 +113,6 @@ void Scene::run() {
                 Vec2r p2 = perspective_projection(p3_2, 2);
                 Vec2r p3 = perspective_projection(p3_3, 2);
 
-                std::cout << p3_1 << ", " << p3_2 << ", " << p3_3 << std::endl;
-
                 Vec2r canvasP1 = viewport_to_canvas(p1);
                 Vec2r canvasP2 = viewport_to_canvas(p2);
                 Vec2r canvasP3 = viewport_to_canvas(p3);
@@ -128,20 +125,17 @@ void Scene::run() {
                     draw_wireframe_triangle(point1, point2, point3);
                     modeText.set_string("Mode: Wireframe");
                 }
-                else if(mode == 1) {
+                else {
                     draw_filled_triangle(point1, point2, point3);
                     modeText.set_string("Mode: Filled");
-                }
-                else {
-                    draw_shaded_triangle(point1, point2, point3, v1.intensity, v2.intensity, v3.intensity, f.color);
-                    modeText.set_string("Mode: Shaded");
                 }
             }
             
         }
 
-        objects[0].rotation[1] += 1;
-        //objects[0].rotation[0] += 1;
+        objects[0].rotation[2] += 1;
+        objects[0].rotation[1] += 5;
+        objects[0].rotation[0] += 1;
 
         windows.render_text(modeText);
         windows.render_text(spaceText);
@@ -151,9 +145,9 @@ void Scene::run() {
 }
 
 Vec2r Scene::perspective_projection(const Vec4r &v, real d) {
-    real z = v[2];
-    real x = (-d/z) * v[0];
-    real y = (-d/z) * v[1];
+    real z = -d/v[2];
+    real x = z * v[0];
+    real y = z * v[1];
 
     return {x, y};
 }
@@ -408,7 +402,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
 
 void Scene::quit() { isRunning = false; }
 
-void Scene::changeMode() { mode = (mode+1) %3; }
+void Scene::changeMode() { mode = (mode+1) %2; }
 
 void Scene::shutdown() { windows.close(); }
 

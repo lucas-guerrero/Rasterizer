@@ -3,14 +3,25 @@
 using namespace aline;
 
 Object::Object(const Shape &shape, const Vec3r &translation, const Vec3r &rotation, const Vec3r &scale):
-    shape(shape), translation(translation), rotation(rotation), scale(scale) {}
+    shape(shape), translation(translation), rotation(rotation), scale(scale) {
+        real x = 0, y = 0, z = 0;
+
+        for(const auto elm: shape.get_vertices()) {
+            x += elm.point[0];
+            y += elm.point[1];
+            z += elm.point[2];
+        }
+
+        real t = shape.get_vertices().size();
+
+        barycentre = Vec3r {x/t, y/t, z/t};
+    }
 
 std::vector<Vertex> Object::get_vertices() { return shape.get_vertices(); }
 
 std::vector<Face> Object::get_faces() { return shape.get_faces(); }
 
 Matrix<real, 4, 4> Object::transform() {
-    Vec3r barycentre = get_barycentre();
     Matrix<real, 4, 4> matrix = matrixTranslation(-barycentre);
 
     matrix = matrixScale() * matrix;
@@ -68,7 +79,7 @@ Matrix<real, 4, 4> Object::matrixRotationY() {
     real sin = std::sin(tmp);
 
     return Matrix<real, 4, 4> {
-        {cos, sin, 0, 0},
+        {cos, 0, sin, 0},
         {0, 1, 0, 0},
         {-sin, 0, cos, 0},
         {0, 0, 0, 1}
@@ -86,18 +97,4 @@ Matrix<real, 4, 4> Object::matrixRotationZ() {
         {0, 0, 1, 0},
         {0, 0, 0, 1}
     };
-}
-
-Vec3r Object::get_barycentre() {
-    real x = 0, y = 0, z = 0;
-
-    for(const auto elm: shape.get_vertices()) {
-        x += elm.point[0];
-        y += elm.point[1];
-        z += elm.point[2];
-    }
-
-    real t = shape.get_vertices().size();
-
-    return {x/t, y/t, z/t};
 }

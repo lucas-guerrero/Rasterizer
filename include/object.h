@@ -15,6 +15,7 @@ public:
     Vec3r translation;
     Vec3r rotation;
     Vec3r scale;
+    Vec3r barycentre;
 
 public:
     Object(const Shape &shape, const Vec3r &translation = {}, const Vec3r &rotation = {}, const Vec3r &scale = {1, 1, 1});
@@ -31,8 +32,6 @@ public:
 
     std::vector<Vertex> get_vertices();
     std::vector<Face> get_faces();
-
-    Vec3r get_barycentre();
 };
 
 }
