@@ -23,6 +23,8 @@ void Scene::load_obj_file( const char * file_name ) {
     std::vector<Vertex> listVertex;
     std::vector<Face> listFace;
 
+    int cpt = 0;
+
     while(file.good()) {
         std::string variable;
 
@@ -37,7 +39,11 @@ void Scene::load_obj_file( const char * file_name ) {
         else if(variable == "v") {
             real x, y, z;
             file >> x >> y >> z;
-            listVertex.push_back(Vertex({x, y, z}, 1));
+            if(cpt%2 == 0)
+                listVertex.push_back(Vertex({x, y, z}, 1));
+            else
+                listVertex.push_back(Vertex({x, y, z}, 0));
+            ++cpt;
         }
         else if(variable == "f") {
             std::string s1, s2, s3;
@@ -53,9 +59,8 @@ void Scene::load_obj_file( const char * file_name ) {
 
     Shape shape = Shape(name, listVertex, listFace);
 
-    add_object(Object(shape, {-5, -5, -50}, {}, {0.1, 0.1, 0.1}));
-
-    //add_object(Object(shape, {0, -50, -50}, {10, 50, 0}, {0.09, 0.09, 0.09}));
+    // Transformation for teapot
+    add_object(Object(shape, {-5, -5, -50}, {}, {0.2, 0.2, 0.2}));
 
     file.close();
 }
@@ -97,6 +102,10 @@ void Scene::run() {
             draw_object(objects[i]);
 
         }
+
+        objects[0].rotation[2] += 5;
+        objects[0].rotation[1] += 5;
+        objects[0].rotation[0] += 5;
 /*
         std::srand(std::time(NULL));
 
@@ -195,9 +204,13 @@ void Scene::draw_object(const Object &o) {
             draw_wireframe_triangle(point1, point2, point3);
             modeText.set_string("Mode: Wireframe");
         }
-        else {
+        else if(mode == 1) {
             draw_filled_triangle(point1, point2, point3);
             modeText.set_string("Mode: Filled");
+        }
+        else {
+            draw_shaded_triangle(point1, point2, point3, v1.intensity, v2.intensity, v3.intensity, f.color);
+            modeText.set_string("Mode: Shading");
         }
     }
 }
@@ -440,7 +453,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
 
 void Scene::quit() { isRunning = false; }
 
-void Scene::changeMode() { mode = (mode+1) %2; }
+void Scene::changeMode() { mode = (mode+1) %3; }
 
 void Scene::shutdown() { windows.close(); }
 
