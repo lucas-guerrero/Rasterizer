@@ -62,6 +62,9 @@ void Scene::load_obj_file( const char * file_name ) {
     // Transformation for teapot
     add_object(Object(shape, {-5, -5, -50}, {}, {0.2, 0.2, 0.2}));
 
+    // Transformation for tetrahedron
+    //add_object(Object(shape, {-1, -1, -5}, {0, 0, 0}));
+
     file.close();
 }
 
@@ -103,9 +106,9 @@ void Scene::run() {
 
         }
 
-        objects[0].rotation[2] += 5;
-        objects[0].rotation[1] += 5;
-        objects[0].rotation[0] += 5;
+        //objects[0].rotation[2] += 5;
+        //objects[0].rotation[1] += 5;
+        //objects[0].rotation[0] += 5;
 /*
         std::srand(std::time(NULL));
 
