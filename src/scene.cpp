@@ -92,9 +92,6 @@ void Scene::run() {
 
     minwin::Text spaceText(10, 10, "Press space to change mode", minwin::white);
 
-    //bool deplacementX = false;
-    //bool deplacementY = false;
-
     while(isRunning) {
         windows.process_input();
 
@@ -105,40 +102,7 @@ void Scene::run() {
             draw_object(objects[i]);
 
         }
-
-        //objects[0].rotation[2] += 5;
-        //objects[0].rotation[1] += 5;
-        //objects[0].rotation[0] += 5;
-/*
-        std::srand(std::time(NULL));
-
-        objects[0].rotation[2] += 5;
-        objects[0].rotation[1] += 5;
-        objects[0].rotation[0] += 5;
-
-        Vec3r trans = objects[0].translation;
-
-        if(trans[0] > 10)
-            deplacementX = false;
-        else if(trans[0] < -15)
-            deplacementX = true;
-
-        if(deplacementX)
-            objects[0].translation[0] += std::rand() % 5;
-        else
-            objects[0].translation[0] -= std::rand() % 5;
-
-
-        if(trans[1] > 5)
-            deplacementY = false;
-        else if(trans[1] < -20)
-            deplacementY = true;
-
-        if(deplacementY)
-            objects[0].translation[1] += std::rand() % 5;
-        else
-            objects[0].translation[1] -= std::rand() % 5;
-*/
+        
         windows.render_text(modeText);
         windows.render_text(spaceText);
         
