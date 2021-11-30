@@ -2,6 +2,10 @@
 
 Create by Lucas GUERRERO
 
+## Changement de fichier obj
+
+Pour modifier les transformations de l'objet, modifier la ligne 63 du fichier src/scene.cpp
+
 ## instruction
 
 To compile Rasterizer
