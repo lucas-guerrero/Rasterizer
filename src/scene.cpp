@@ -102,6 +102,8 @@ void Scene::run() {
             draw_object(objects[i]);
 
         }
+
+        objects[0].rotation[1] += 5;
         
         windows.render_text(modeText);
         windows.render_text(spaceText);
