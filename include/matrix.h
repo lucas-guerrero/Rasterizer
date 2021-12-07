@@ -64,6 +64,8 @@ namespace aline {
 		}
 	};
 
+	using Mat44r = Matrix<real, 4, 4>;
+
 	template <typename T, std::size_t M, std::size_t N>
 	Matrix<T, M, N> inverse(const Matrix<T, M, N>& m) {
 		Matrix<T, M, N> mPrime = Matrix<T, M, N>(m);

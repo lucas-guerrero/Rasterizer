@@ -2,10 +2,11 @@
 #include <string>
 #include <vector>
 #include "scene.h"
+#include "vectorAxis.h"
 
 using namespace aline;
 
-Scene::Scene(): isRunning(true) { objects = std::vector<Object>(); }
+Scene::Scene(): camera(RATIO), isRunning(true) { objects = std::vector<Object>(); }
 
 void Scene::load_data( int argc, const char * argv[] ) {
     for(int i = 1; i<argc; ++i) {
@@ -71,6 +72,7 @@ void Scene::load_obj_file( const char * file_name ) {
 void Scene::add_object(const Object &object) { objects.push_back(object); }
 
 void Scene::initialise() {
+
     windows.set_title("Rasterizer");
     windows.set_height(CANVAS_HEIGHT);
     windows.set_width(CANVAS_WIDTH);
@@ -80,6 +82,15 @@ void Scene::initialise() {
 
     windows.register_quit_behavior( new QuitButtonBehavior( *this ) );
     windows.register_key_behavior( minwin::KEY_SPACE, new ChangeModeBehavior( *this ) );
+
+    windows.register_key_behavior(minwin::KEY_Q, new BackwardXBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_D, new ForwardXBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_S, new BackwardZBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_Z, new ForwardZBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_E, new BackwardYBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_A, new ForwardYBehavior(*this));
 
     if( not windows.open() ) {
         std::cerr << "Couldn't open window.\n";
@@ -104,6 +115,7 @@ void Scene::run() {
         }
 
         objects[0].rotation[1] += 5;
+        camera.update();
         
         windows.render_text(modeText);
         windows.render_text(spaceText);
@@ -133,7 +145,11 @@ Vec2i Scene::canvas_to_window( const Vec2r & point ) const {
 }
 
 void Scene::draw_object(const Object &o) {
-    Matrix<real, 4, 4> matrixTransform = o.transform();
+
+    Mat44r matrixCamera = camera.tranform();
+    Mat44r matrixTransform = o.transform();
+
+    matrixTransform = matrixCamera * matrixTransform;
 
     std::vector<Vertex> vertices = o.get_vertices();
     std::vector<Face> faces = o.get_faces();
@@ -426,12 +442,56 @@ void Scene::changeMode() { mode = (mode+1) %3; }
 
 void Scene::shutdown() { windows.close(); }
 
+
 QuitButtonBehavior::QuitButtonBehavior( Scene & scene ) : owner(scene) {}
 
 void QuitButtonBehavior::on_click() const { owner.quit(); }
+
 
 ChangeModeBehavior::ChangeModeBehavior( Scene & scene ) : owner(scene) {}
 
 void ChangeModeBehavior::on_press() const { owner.changeMode(); }
 
 void ChangeModeBehavior::on_release() const {  }
+
+
+ForwardXBehavior::ForwardXBehavior( Scene & scene ) : owner(scene) {}
+
+void ForwardXBehavior::on_press() const { owner.getCamera().move(0, Forward::X); }
+
+void ForwardXBehavior::on_release() const { owner.getCamera().stopMove(0); }
+
+
+BackwardXBehavior::BackwardXBehavior( Scene & scene ) : owner(scene) {}
+
+void BackwardXBehavior::on_press() const { owner.getCamera().move(0, Backward::X); }
+
+void BackwardXBehavior::on_release() const { owner.getCamera().stopMove(0); }
+
+
+ForwardZBehavior::ForwardZBehavior( Scene & scene ) : owner(scene) {}
+
+void ForwardZBehavior::on_press() const { owner.getCamera().move(2, Forward::Z); }
+
+void ForwardZBehavior::on_release() const { owner.getCamera().stopMove(2); }
+
+
+BackwardZBehavior::BackwardZBehavior( Scene & scene ) : owner(scene) {}
+
+void BackwardZBehavior::on_press() const { owner.getCamera().move(2, Backward::Z); }
+
+void BackwardZBehavior::on_release() const { owner.getCamera().stopMove(2); }
+
+
+ForwardYBehavior::ForwardYBehavior( Scene & scene ) : owner(scene) {}
+
+void ForwardYBehavior::on_press() const { owner.getCamera().move(1, Forward::Y); }
+
+void ForwardYBehavior::on_release() const { owner.getCamera().stopMove(1); }
+
+
+BackwardYBehavior::BackwardYBehavior( Scene & scene ) : owner(scene) {}
+
+void BackwardYBehavior::on_press() const { owner.getCamera().move(1, Backward::Y); }
+
+void BackwardYBehavior::on_release() const { owner.getCamera().stopMove(1); }

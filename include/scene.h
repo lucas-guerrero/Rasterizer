@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "object.h"
+#include "camera.h"
 
 #include "color.h"
 #include "ibehavior.h"
@@ -16,7 +17,9 @@ class Scene {
   const real VIEWPORT_WIDTH = 2;
   const real VIEWPORT_HEIGHT = VIEWPORT_WIDTH * RATIO;
 
+  Camera camera;
   std::vector<Object> objects;
+  
   minwin::Window windows;
   bool isRunning;
   uint mode = 0; // 0 = wireframe, 1 = filled, 2 = shaded
@@ -25,6 +28,7 @@ class Scene {
 
 public:
   Scene();
+  inline Camera &getCamera() { return camera; }
   void load_data( int argc, const char * argv[] );
   void load_obj_file( const char * file_name );
   void add_object(const Object& object);
@@ -64,6 +68,60 @@ public:
   void on_release() const override;
 private:
   Scene & owner;
+};
+
+class ForwardXBehavior : public minwin::IKeyBehavior {
+public:
+  ForwardXBehavior( Scene & scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene & owner;
+};
+
+class BackwardXBehavior : public minwin::IKeyBehavior {
+public:
+  BackwardXBehavior( Scene & scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene & owner;
+};
+
+class ForwardZBehavior : public minwin::IKeyBehavior {
+public:
+  ForwardZBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class BackwardZBehavior : public minwin::IKeyBehavior {
+public:
+  BackwardZBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class ForwardYBehavior : public minwin::IKeyBehavior {
+public:
+  ForwardYBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class BackwardYBehavior : public minwin::IKeyBehavior {
+public:
+  BackwardYBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
 };
 
 }

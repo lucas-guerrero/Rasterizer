@@ -3,8 +3,6 @@
 
 #define ALPHA 60
 #define PI 3.14159265
-#define F 100
-#define N 2
 
 namespace aline {
 
@@ -18,9 +16,12 @@ public:
     Vec4r bottom;
     Vec4r top;
 
-    real alpha;
+    real dNear;
+    real dFar;
 
-    Frustum(real a);
+    Frustum(real dNear, real dFar, real a, real e);
+
+    void update(real a, real e);
 };
 
 }

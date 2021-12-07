@@ -20,15 +20,15 @@ public:
 public:
     Object(const Shape &shape, const Vec3r &translation = {}, const Vec3r &rotation = {}, const Vec3r &scale = {1, 1, 1});
 
-    Matrix<real, 4, 4> transform() const;
+    Mat44r transform() const;
 
-    Matrix<real, 4, 4> matrixTranslation(const Vec3r &transl) const;
-    Matrix<real, 4, 4> matrixScale() const;
-    Matrix<real, 4, 4> matrixRotation() const;
+    Mat44r matrixTranslation(const Vec3r &transl) const;
+    Mat44r matrixScale() const;
+    Mat44r matrixRotation() const;
 
-    Matrix<real, 4, 4> matrixRotationX() const;
-    Matrix<real, 4, 4> matrixRotationY() const;
-    Matrix<real, 4, 4> matrixRotationZ() const;
+    Mat44r matrixRotationX() const;
+    Mat44r matrixRotationY() const;
+    Mat44r matrixRotationZ() const;
 
     std::vector<Vertex> get_vertices() const;
     std::vector<Face> get_faces() const;
