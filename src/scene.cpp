@@ -61,10 +61,10 @@ void Scene::load_obj_file( const char * file_name ) {
     Shape shape = Shape(name, listVertex, listFace);
 
     // Transformation for teapot
-    add_object(Object(shape, {-5, -5, -50}, {}, {0.2, 0.2, 0.2}));
+    add_object(Object(shape, -1, {-5, -5, -50}, {}, {0.2, 0.2, 0.2}));
 
     // Transformation for tetrahedron
-    //add_object(Object(shape, {-1, -1, -5}, {0, 0, 0}));
+    //add_object(Object(shape, -1, {-1, -1, -5}, {0, 0, 0}));
 
     file.close();
 }
@@ -92,6 +92,15 @@ void Scene::initialise() {
     windows.register_key_behavior(minwin::KEY_E, new BackwardYBehavior(*this));
     windows.register_key_behavior(minwin::KEY_A, new ForwardYBehavior(*this));
 
+    windows.register_key_behavior(minwin::KEY_K, new CwXBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_I, new AcwXBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_L, new CwYBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_J, new AcwYBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_O, new CwZBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_U, new AcwZBehavior(*this));
+
     if( not windows.open() ) {
         std::cerr << "Couldn't open window.\n";
     }
@@ -109,12 +118,12 @@ void Scene::run() {
         windows.clear();
         
         for(uint i = 0; i<objects.size(); ++i) {
-
+            std::cout << "Test 1" << std::endl;
             draw_object(objects[i]);
 
         }
 
-        objects[0].rotation[1] += 5;
+        //objects[0].rotation[1] += 5;
         camera.update();
         
         windows.render_text(modeText);
@@ -144,12 +153,86 @@ Vec2i Scene::canvas_to_window( const Vec2r & point ) const {
     return Vec2i {sX, sY};
 }
 
-void Scene::draw_object(const Object &o) {
+Object Scene::apply_object_transform(const Object& object) {
+    Mat44r matrixTransform = object.transform();
 
-    Mat44r matrixCamera = camera.tranform();
+    std::vector<Vertex> vertices;
+
+    for(const auto vertex: object.get_vertices()) {
+
+        Vec3r pp = vertex.point;
+        Vec4r p = {pp[0], pp[1], pp[2], 1};
+
+        Vec4r point = matrixTransform * p;
+
+        vertices.push_back(Vertex({point[0], point[1], point[2]}, vertex.intensity));
+    }
+
+    Shape shape = Shape(object.shape.get_name(), vertices, object.get_faces());
+
+    return Object(shape, object.rayon);
+}
+
+Object Scene::apply_camera_transform(const Object& object) {
+    Mat44r matrixTransform = camera.transform();
+
+    std::vector<Vertex> vertices;
+
+    for(const auto vertex: object.get_vertices()) {
+
+        Vec3r pp = vertex.point;
+        Vec4r p = {pp[0], pp[1], pp[2], 1};
+
+        Vec4r point = matrixTransform * p;
+
+        vertices.push_back(Vertex({point[0], point[1], point[2]}, vertex.intensity));
+    }
+
+    Shape shape = Shape(object.shape.get_name(), vertices, object.get_faces());
+
+    return Object(shape, object.rayon);
+}
+
+Object Scene::cull_and_clip(const Object& object) {
+
+    std::vector<Vertex> vertices = object.get_vertices();
+
+    std::vector<Face> faces;
+
+    for(const auto face: object.get_faces()) {
+        Vec3r p0 = vertices[face.idP1].point;
+        Vec3r p1 = vertices[face.idP2].point;
+        Vec3r p2 = vertices[face.idP3].point;
+
+        Vec3r e01 = p1 - p0;
+        Vec3r e02 = p2 - p0;
+
+        Vec3r normal =  (e01 * e02) / sq_norm(e01-e02);
+
+        real d = dot({0, 0, -1}, normal);
+
+        std::cout << d << std::endl;
+
+        if(d >= 0) {
+            faces.push_back(face);
+        }
+    }
+
+    Shape shape = Shape(object.shape.get_name(), vertices, faces);
+
+    return Object(shape, object.rayon);
+}
+
+void Scene::draw_object(const Object &object) {
+/*
+    Mat44r matrixCamera = camera.transform();
     Mat44r matrixTransform = o.transform();
 
     matrixTransform = matrixCamera * matrixTransform;
+*/
+    Object o_transform = apply_object_transform(object);
+    Object o_camera = apply_camera_transform(o_transform);
+    Object o = cull_and_clip(o_camera);
 
     std::vector<Vertex> vertices = o.get_vertices();
     std::vector<Face> faces = o.get_faces();
@@ -163,14 +246,14 @@ void Scene::draw_object(const Object &o) {
         Vertex v2 = vertices[f.idP2];
         Vertex v3 = vertices[f.idP3];
 
-        Vec4r p3_1 = Vec4r {v1.point[0], v1.point[1], v1.point[2], 1};
-        Vec4r p3_2 = Vec4r {v2.point[0], v2.point[1], v2.point[2], 1};
-        Vec4r p3_3 = Vec4r {v3.point[0], v3.point[1], v3.point[2], 1};
-
+        Vec4r p3_1 = {v1.point[0], v1.point[1], v1.point[2], 1};
+        Vec4r p3_2 = {v2.point[0], v2.point[1], v2.point[2], 1};
+        Vec4r p3_3 = {v3.point[0], v3.point[1], v3.point[2], 1};
+/*
         p3_1 = matrixTransform * p3_1;
         p3_2 = matrixTransform * p3_2;
         p3_3 = matrixTransform * p3_3;
-
+*/
         //std::cout << p3_1 << ", " << p3_2 << ", " << p3_3 << std::endl;
 
         Vec2r p1 = perspective_projection(p3_1, 2);
@@ -444,54 +527,69 @@ void Scene::shutdown() { windows.close(); }
 
 
 QuitButtonBehavior::QuitButtonBehavior( Scene & scene ) : owner(scene) {}
-
 void QuitButtonBehavior::on_click() const { owner.quit(); }
 
 
 ChangeModeBehavior::ChangeModeBehavior( Scene & scene ) : owner(scene) {}
-
 void ChangeModeBehavior::on_press() const { owner.changeMode(); }
-
 void ChangeModeBehavior::on_release() const {  }
 
 
 ForwardXBehavior::ForwardXBehavior( Scene & scene ) : owner(scene) {}
-
 void ForwardXBehavior::on_press() const { owner.getCamera().move(0, Forward::X); }
-
 void ForwardXBehavior::on_release() const { owner.getCamera().stopMove(0); }
 
 
 BackwardXBehavior::BackwardXBehavior( Scene & scene ) : owner(scene) {}
-
 void BackwardXBehavior::on_press() const { owner.getCamera().move(0, Backward::X); }
-
 void BackwardXBehavior::on_release() const { owner.getCamera().stopMove(0); }
 
 
 ForwardZBehavior::ForwardZBehavior( Scene & scene ) : owner(scene) {}
-
 void ForwardZBehavior::on_press() const { owner.getCamera().move(2, Forward::Z); }
-
 void ForwardZBehavior::on_release() const { owner.getCamera().stopMove(2); }
 
 
 BackwardZBehavior::BackwardZBehavior( Scene & scene ) : owner(scene) {}
-
 void BackwardZBehavior::on_press() const { owner.getCamera().move(2, Backward::Z); }
-
 void BackwardZBehavior::on_release() const { owner.getCamera().stopMove(2); }
 
 
 ForwardYBehavior::ForwardYBehavior( Scene & scene ) : owner(scene) {}
-
 void ForwardYBehavior::on_press() const { owner.getCamera().move(1, Forward::Y); }
-
 void ForwardYBehavior::on_release() const { owner.getCamera().stopMove(1); }
 
 
 BackwardYBehavior::BackwardYBehavior( Scene & scene ) : owner(scene) {}
-
 void BackwardYBehavior::on_press() const { owner.getCamera().move(1, Backward::Y); }
-
 void BackwardYBehavior::on_release() const { owner.getCamera().stopMove(1); }
+
+
+CwXBehavior::CwXBehavior( Scene & scene ) : owner(scene) {}
+void CwXBehavior::on_press() const { owner.getCamera().rotate(0, Clockwise::X); }
+void CwXBehavior::on_release() const { owner.getCamera().stopRotate(0); }
+
+
+AcwXBehavior::AcwXBehavior( Scene & scene ) : owner(scene) {}
+void AcwXBehavior::on_press() const { owner.getCamera().rotate(0, AntiClockwise::X); }
+void AcwXBehavior::on_release() const { owner.getCamera().stopRotate(0); }
+
+
+CwYBehavior::CwYBehavior( Scene & scene ) : owner(scene) {}
+void CwYBehavior::on_press() const { owner.getCamera().rotate(1, Clockwise::Y); }
+void CwYBehavior::on_release() const { owner.getCamera().stopRotate(1); }
+
+
+AcwYBehavior::AcwYBehavior( Scene & scene ) : owner(scene) {}
+void AcwYBehavior::on_press() const { owner.getCamera().rotate(1, AntiClockwise::Y); }
+void AcwYBehavior::on_release() const { owner.getCamera().stopRotate(1); }
+
+
+CwZBehavior::CwZBehavior( Scene & scene ) : owner(scene) {}
+void CwZBehavior::on_press() const { owner.getCamera().rotate(2, Clockwise::Z); }
+void CwZBehavior::on_release() const { owner.getCamera().stopRotate(2); }
+
+
+AcwZBehavior::AcwZBehavior( Scene & scene ) : owner(scene) {}
+void AcwZBehavior::on_press() const { owner.getCamera().rotate(2, AntiClockwise::Z); }
+void AcwZBehavior::on_release() const { owner.getCamera().stopRotate(2); }

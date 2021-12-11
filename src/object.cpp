@@ -2,7 +2,7 @@
 
 using namespace aline;
 
-Object::Object(const Shape &shape, const Vec3r &translation, const Vec3r &rotation, const Vec3r &scale):
+Object::Object(const Shape &shape, real r, const Vec3r &translation, const Vec3r &rotation, const Vec3r &scale):
     shape(shape), translation(translation), rotation(rotation), scale(scale) {
         real x = 0, y = 0, z = 0;
 
@@ -15,6 +15,15 @@ Object::Object(const Shape &shape, const Vec3r &translation, const Vec3r &rotati
         real t = shape.get_vertices().size();
 
         barycentre = Vec3r {x/t, y/t, z/t};
+
+        if(r < 0) {
+            real max = 0;
+            for(const auto elm: shape.get_vertices()) {
+                x += elm.point[0];
+                y += elm.point[1];
+                z += elm.point[2];
+            }
+        }
     }
 
 std::vector<Vertex> Object::get_vertices() const { return shape.get_vertices(); }

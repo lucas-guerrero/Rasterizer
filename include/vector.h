@@ -79,7 +79,7 @@ namespace aline {
 	T sq_norm(const Vector<T, N>& v) {
 		T result = T();
 		for (std::size_t i = 0; i < N; ++i)
-			result = result + v[i] * v[i];
+			result += v[i] * v[i];
 		return result;
 	}
 

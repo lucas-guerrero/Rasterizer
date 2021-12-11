@@ -17,8 +17,10 @@ public:
     Vec3r scale;
     Vec3r barycentre;
 
+    real rayon;
+
 public:
-    Object(const Shape &shape, const Vec3r &translation = {}, const Vec3r &rotation = {}, const Vec3r &scale = {1, 1, 1});
+    Object(const Shape &shape, real r, const Vec3r &translation = {}, const Vec3r &rotation = {}, const Vec3r &scale = {1, 1, 1});
 
     Mat44r transform() const;
 

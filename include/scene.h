@@ -42,6 +42,11 @@ private:
 
   void draw_object(const Object& object);
 
+  Object apply_object_transform(const Object& object);
+  Object apply_camera_transform(const Object& object);
+
+  Object cull_and_clip(const Object& object);
+
   Vec2r perspective_projection(const Vec4r &v, real d);
   Vec2r viewport_to_canvas( const Vec2r & point ) const;
   Vec2i canvas_to_window( const Vec2r & point ) const;
@@ -52,6 +57,7 @@ private:
   std::vector<uint> interpolation(int i0, int d0, int i1, int d1) const;
   std::vector<real> interpolation_shaded(int i0, real h0, int i1, real h1) const;
 };
+
 
 class QuitButtonBehavior : public minwin::IButtonBehavior {
 public:
@@ -69,6 +75,7 @@ public:
 private:
   Scene & owner;
 };
+
 
 class ForwardXBehavior : public minwin::IKeyBehavior {
 public:
@@ -88,6 +95,7 @@ private:
   Scene & owner;
 };
 
+
 class ForwardZBehavior : public minwin::IKeyBehavior {
 public:
   ForwardZBehavior( Scene &scene );
@@ -106,6 +114,7 @@ private:
   Scene &owner;
 };
 
+
 class ForwardYBehavior : public minwin::IKeyBehavior {
 public:
   ForwardYBehavior( Scene &scene );
@@ -118,6 +127,63 @@ private:
 class BackwardYBehavior : public minwin::IKeyBehavior {
 public:
   BackwardYBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+
+class CwXBehavior : public minwin::IKeyBehavior {
+public:
+  CwXBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class AcwXBehavior : public minwin::IKeyBehavior {
+public:
+  AcwXBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+
+class CwYBehavior : public minwin::IKeyBehavior {
+public:
+  CwYBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class AcwYBehavior : public minwin::IKeyBehavior {
+public:
+  AcwYBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+
+class CwZBehavior : public minwin::IKeyBehavior {
+public:
+  CwZBehavior( Scene &scene );
+  void on_press() const override;
+  void on_release() const override;
+private:
+  Scene &owner;
+};
+
+class AcwZBehavior : public minwin::IKeyBehavior {
+public:
+  AcwZBehavior( Scene &scene );
   void on_press() const override;
   void on_release() const override;
 private:
