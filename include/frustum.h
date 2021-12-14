@@ -1,5 +1,6 @@
 #pragma once
 #include "vector.h"
+#include "object.h"
 
 #define ALPHA 60
 #define PI 3.14159265
@@ -22,6 +23,12 @@ public:
     Frustum(real dNear, real dFar, real a, real e);
 
     void update(real a, real e);
+
+    Object clipping(const Object &object);
+
+private:
+    Object clippingCut(const Object &object, const Vec4r &plan);
+    Vec4r interseption(const Vec4r &point, const Vec4r &direction, const Vec4r &plan);
 };
 
 }

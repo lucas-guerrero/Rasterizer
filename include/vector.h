@@ -211,4 +211,12 @@ namespace aline {
 	Vector<T, N> unit_vector(const Vector<T, N>& v) {
 		return v / norm(v);
 	}
+
+	template <typename T, std::size_t N>
+	T dist(const Vector<T, N>& v1, const Vector<T, N>& v2) {
+		T result = T();
+		for (std::size_t i = 0; i < N; ++i)
+			result += (T)( std::pow(v1[i] - v2[i], 2) );
+		return std::sqrt(result);
+	}
 }
