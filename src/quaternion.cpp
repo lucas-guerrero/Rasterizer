@@ -15,9 +15,10 @@ Mat44r Quaternion::transformToMatrix() {
     real z2 = z*z;
 
     return Mat44r {
-        {1 - 2*y2 - 2*z2, 2*x*y - 2*w*z, 2*x*z + 2*w*y},
-        {2*x*y + 2*w*z, 1 - 2*x2 - 2*z2, 2*y*z - 2*w*x},
-        {2*x*z - 2*w*y, 2*y*z + 2*w*x, 1 - 2*x2 - 2*y2}
+        {1 - 2*y2 - 2*z2, 2*x*y - 2*w*z, 2*x*z + 2*w*y, 0},
+        {2*x*y + 2*w*z, 1 - 2*x2 - 2*z2, 2*y*z - 2*w*x, 0},
+        {2*x*z - 2*w*y, 2*y*z + 2*w*x, 1 - 2*x2 - 2*y2, 0},
+        {0, 0, 0, 1}
     };
 }
 

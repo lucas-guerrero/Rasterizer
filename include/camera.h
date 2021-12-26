@@ -11,6 +11,7 @@ class Camera {
 public:
     real aspectRatio;
     real focalDistance;
+    real distanceMax;
     Vec3r position;
     Vec3r rotation;
     real speedMove;
@@ -18,15 +19,12 @@ public:
     real speedZoom;
     Frustum fov;
 
-    Vec3r moveAdd;
-    Vec3r rotateAdd;
-
     Quaternion qRotation;
 
-    bool moveTab[3];
-    bool rotateTab[3];
+    Vec3r moveTab[3];
+    Vec3r rotateTab[3];
 
-    Camera(real aspectRatio, real focalDistance = 2, Vec3r position = {}, Vec3r rotation = {}, real speedMove = 0.5, real speedRotation = 0.5, real speedZoom = 0.0625);
+    Camera(real aspectRatio, real focalDistance = 2, real distanceMax = 100, real speedMove = 0.5, real speedRotation = 0.5, real speedZoom = 0.0625);
 
     Mat44r transform() const;
 

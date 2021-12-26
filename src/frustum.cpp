@@ -47,119 +47,98 @@ Object Frustum::clippingCut(const Object &object, const Vec4r &plan) {
         real distP2 = dot(p2, {plan[0], plan[1], plan[2]}) + plan[3];
         real distP3 = dot(p3, {plan[0], plan[1], plan[2]}) + plan[3];
 
-        if(distP1 >= 0 && distP2 >= 0 && distP3 >= 0) newFaces.push_back(face);
-        else if(distP1 < 0 && distP2 < 0 && distP3 < 0) continue;
+        int isIn[3] = {0, 0, 0};
+
+        if(distP1 >= 0) isIn[0] = 1;
+        if(distP2 >= 0) isIn[1] = 1;
+        if(distP3 >= 0) isIn[2] = 1;
+
+        int sum = isIn[0] + isIn[1] + isIn[2];
+
+        if(sum == 3) newFaces.push_back(face);
+        else if(sum == 0) continue;
         else {
-            bool isOne = true;
-            Vertex A, B, C;
-            uint idA, idB, idC;
+            Vec3r a = p1;
+            Vec3r b = p2;
+            Vec3r c = p3;
 
-            if(distP1 >= 0) {
-                if(distP2 >= 0) {
-                    A = v1;
-                    B = v2;
-                    C = v3;
+            if(sum == 1) {
+                if(isIn[0] == 1) {
+                    Vec4r prime1 = interseption({a[0], a[1], a[2], 1}, {b[0], b[1], b[2], 0}, plan);
+                    Vec4r prime2 = interseption({a[0], a[1], a[2], 1}, {c[0], c[1], c[2], 0}, plan);
 
-                    idA = face.idP1;
-                    idB = face.idP2;
-                    idC = face.idP3;
-                    isOne = false;
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v2.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v3.intensity));
+
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(face.idP1, size-2, size-1, face.color));
                 }
+
+                else if(isIn[1] == 1) {
+                    Vec4r prime1 = interseption({b[0], b[1], b[2], 1}, {a[0], a[1], a[2], 0}, plan);
+                    Vec4r prime2 = interseption({b[0], b[1], b[2], 1}, {c[0], c[1], c[2], 0}, plan);
+
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v1.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v3.intensity));
+
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(size-2, face.idP2, size-1, face.color));
+                }
+
                 else {
-                    if(distP3 >= 0) {
-                        A = v1;
-                        C = v2;
-                        B = v3;
+                    Vec4r prime1 = interseption({c[0], c[1], c[2], 1}, {a[0], a[1], a[2], 0}, plan);
+                    Vec4r prime2 = interseption({c[0], c[1], c[2], 1}, {b[0], b[1], b[2], 0}, plan);
 
-                        idA = face.idP1;
-                        idC = face.idP2;
-                        idB = face.idP3;
-                        isOne = false;
-                    }
-                    else {
-                        A = v1;
-                        B = v2;
-                        C = v3;
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v1.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v2.intensity));
 
-                        idA = face.idP1;
-                        idB = face.idP2;
-                        idC = face.idP3;
-                    }
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(size-2, size-1, face.idP3, face.color));
                 }
             }
+
             else {
-                if(distP2 >= 0) {
-                    if(distP3 >= 0) {
-                        C = v1;
-                        A = v2;
-                        B = v3;
+                if(isIn[0] == 0) {
+                    Vec4r prime1 = interseption({b[0], b[1], b[2], 1}, {a[0], a[1], a[2], 0}, plan);
+                    Vec4r prime2 = interseption({c[0], c[1], c[2], 1}, {a[0], a[1], a[2], 0}, plan);
 
-                        idC = face.idP1;
-                        idA = face.idP2;
-                        idB = face.idP3;
-                    }
-                    else {
-                        B = v1;
-                        A = v2;
-                        C = v3;
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v1.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v1.intensity));
 
-                        idB = face.idP1;
-                        idA = face.idP2;
-                        idC = face.idP3;
-                    }
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(face.idP2, face.idP3, size-2, face.color));
+                    newFaces.push_back(Face(size-2, face.idP3, size-1, face.color));
                 }
+
+                else if(isIn[1] == 0) {
+                    Vec4r prime1 = interseption({a[0], a[1], a[2], 1}, {b[0], b[1], b[2], 0}, plan);
+                    Vec4r prime2 = interseption({c[0], c[1], c[2], 1}, {b[0], b[1], b[2], 0}, plan);
+
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v2.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v2.intensity));
+
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(face.idP1, face.idP3, size-2, face.color));
+                    newFaces.push_back(Face(size-2, face.idP3, size-1, face.color));
+                }
+
                 else {
-                    B = v1;
-                    C = v2;
-                    A = v3;
+                    Vec4r prime1 = interseption({a[0], a[1], a[2], 1}, {c[0], c[1], c[2], 0}, plan);
+                    Vec4r prime2 = interseption({b[0], b[1], b[2], 1}, {c[0], c[1], c[2], 0}, plan);
 
-                    idB = face.idP1;
-                    idC = face.idP2;
-                    idA = face.idP3;
-                    isOne = false;
+                    newVertices.push_back(Vertex({prime1[0], prime1[1], prime1[2]}, v3.intensity));
+                    newVertices.push_back(Vertex({prime2[0], prime2[1], prime2[2]}, v3.intensity));
+
+                    uint size = newVertices.size();
+
+                    newFaces.push_back(Face(face.idP1, face.idP2, size-2, face.color));
+                    newFaces.push_back(Face(size-2, face.idP2, size-1, face.color));
                 }
-            }
-
-            if(isOne) {
-                // 1 Positif
-
-                Vec3r a = A.point;
-                Vec3r b = B.point;
-                Vec3r c = C.point;
-
-
-                Vec3r AB = b - a;
-                Vec3r AC = c - a;
-
-                Vec4r BPrime = interseption({a[0], a[1], a[2], 1}, {b[0], b[1], b[2], 0}, plan);
-                Vec4r CPrime = interseption({a[0], a[1], a[2], 1}, {b[0], b[1], b[2], 0}, plan);
-
-                newVertices.push_back(Vertex({BPrime[0], BPrime[1], BPrime[2]}, B.intensity));
-                newVertices.push_back(Vertex({CPrime[0], CPrime[1], CPrime[2]}, C.intensity));
-
-                uint size = newVertices.size();
-
-                newFaces.push_back(Face(idA, size-2, size-1, face.color));
-            }
-            else {
-                Vec3r a = A.point;
-                Vec3r b = B.point;
-                Vec3r c = C.point;
-
-                Vec3r AC = c - a;
-                Vec3r BC = c - b;
-
-                Vec4r APrime = interseption({a[0], a[1], a[2], 1}, {c[0], c[1], c[2], 0}, plan);
-                Vec4r BPrime = interseption({b[0], b[1], b[2], 1}, {c[0], c[1], c[2], 0}, plan);
-
-                newVertices.push_back(Vertex({APrime[0], APrime[1], APrime[2]}, C.intensity));
-                newVertices.push_back(Vertex({BPrime[0], BPrime[1], BPrime[2]}, C.intensity));
-
-                uint size = newVertices.size();
-
-                newFaces.push_back(Face(idA, idB, size-2, face.color));
-
-                newFaces.push_back(Face(size-2, idB, size-1, face.color));
             }
         }
     }

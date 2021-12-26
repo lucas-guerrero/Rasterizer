@@ -66,6 +66,7 @@ namespace aline {
 	using uint = unsigned int;
 	using real = double;
 	using Vec2i = Vector<int, 2>;
+	using Vec3i = Vector<int, 3>;
 	using Vec2r = Vector<real, 2>;
 	using Vec3r = Vector<real, 3>;
 	using Vec4r = Vector<real, 4>;

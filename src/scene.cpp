@@ -6,7 +6,12 @@
 
 using namespace aline;
 
-Scene::Scene(): camera(RATIO), isRunning(true) { objects = std::vector<Object>(); }
+Scene::Scene(): camera(RATIO), isRunning(true) { 
+    objects = std::vector<Object>();
+    depth_buffer = new real*[600];
+    for(int i=0; i<600; ++i)
+        depth_buffer[i] = new real[600];
+}
 
 void Scene::load_data( int argc, const char * argv[] ) {
     for(int i = 1; i<argc; ++i) {
@@ -83,15 +88,6 @@ void Scene::initialise() {
     windows.register_quit_behavior( new QuitButtonBehavior( *this ) );
     windows.register_key_behavior( minwin::KEY_SPACE, new ChangeModeBehavior( *this ) );
 
-    windows.register_key_behavior(minwin::KEY_Q, new BackwardXBehavior(*this));
-    windows.register_key_behavior(minwin::KEY_D, new ForwardXBehavior(*this));
-
-    windows.register_key_behavior(minwin::KEY_S, new BackwardZBehavior(*this));
-    windows.register_key_behavior(minwin::KEY_Z, new ForwardZBehavior(*this));
-
-    windows.register_key_behavior(minwin::KEY_E, new BackwardYBehavior(*this));
-    windows.register_key_behavior(minwin::KEY_A, new ForwardYBehavior(*this));
-
     windows.register_key_behavior(minwin::KEY_K, new CwXBehavior(*this));
     windows.register_key_behavior(minwin::KEY_I, new AcwXBehavior(*this));
 
@@ -101,9 +97,24 @@ void Scene::initialise() {
     windows.register_key_behavior(minwin::KEY_O, new CwZBehavior(*this));
     windows.register_key_behavior(minwin::KEY_U, new AcwZBehavior(*this));
 
+    windows.register_key_behavior(minwin::KEY_Q, new BackwardXBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_D, new ForwardXBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_S, new BackwardZBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_Z, new ForwardZBehavior(*this));
+
+    windows.register_key_behavior(minwin::KEY_E, new BackwardYBehavior(*this));
+    windows.register_key_behavior(minwin::KEY_A, new ForwardYBehavior(*this));
+
     if( not windows.open() ) {
         std::cerr << "Couldn't open window.\n";
     }
+}
+
+void Scene::initDepthBuffer() {
+    for(int i=0; i<600; ++i)
+        for(int j=0; j<600; ++j)
+            depth_buffer[i][j] = 0;
 }
 
 void Scene::run() {
@@ -116,7 +127,8 @@ void Scene::run() {
         windows.process_input();
 
         windows.clear();
-        
+
+        initDepthBuffer();
         for(uint i = 0; i<objects.size(); ++i) {
             draw_object(objects[i]);
         }
@@ -130,24 +142,36 @@ void Scene::run() {
     }
 }
 
-Vec2r Scene::perspective_projection(const Vec4r &v, real d) {
-    real z = -d/v[2];
-    real x = z * v[0];
-    real y = z * v[1];
+Vec3r Scene::perspective_projection(const Vec4r &v, real d) {
+    real f = camera.distanceMax;
+    Mat44r matrixProj = {
+        {d, 0, 0, 0},
+        {0, d, 0, 0},
+        {0, 0, -(f+d)/(f-d), -(2*d*f)/(f-d)},
+        {0, 0, -1, 0}
+    };
 
-    return {x, y};
+    Vec4r vecProj = matrixProj * v;
+
+    real x = vecProj[0] / vecProj[3];
+    real y = vecProj[1] / vecProj[3];
+    real z = vecProj[2] / vecProj[3];
+
+    return {x, y, z};
 }
 
-Vec2r Scene::viewport_to_canvas( const Vec2r & point ) const {
+Vec3r Scene::viewport_to_canvas( const Vec3r & point ) const {
     real cX = ( point[0] * CANVAS_WIDTH ) / VIEWPORT_WIDTH;
     real cY = ( point[1] * CANVAS_HEIGHT ) / VIEWPORT_HEIGHT;
-    return Vec2r {cX, cY};
+    real cZ = ( point[2] * (camera.distanceMax - camera.focalDistance) ) / 2;
+    return {cX, cY, cZ};
 }
 
-Vec2i Scene::canvas_to_window( const Vec2r & point ) const {
-    int sX = std::round(CANVAS_WIDTH / 2 + point[0]);
-    int sY = std::round(CANVAS_HEIGHT / 2 - point[1]);
-    return Vec2i {sX, sY};
+Vec3r Scene::canvas_to_window( const Vec3r & point ) const {
+    real sX = CANVAS_WIDTH / 2 + point[0];
+    real sY = CANVAS_HEIGHT / 2 - point[1];
+    real sZ = (camera.distanceMax - camera.focalDistance) / 2 + point[2];
+    return {sX, sY, sZ};
 }
 
 Object Scene::apply_object_transform(const Object& object) {
@@ -172,7 +196,12 @@ Object Scene::apply_object_transform(const Object& object) {
 
 Object Scene::apply_camera_transform(const Object& object) {
     Mat44r matrixTransform = camera.transform();
+/*
+    Mat44r matrixBarycentreMoins = object.matrixTranslation(-object.barycentre);
+    Mat44r matrixBarycentre = object.matrixTranslation(object.barycentre);
 
+    matrixTransform = matrixBarycentre * matrixTransform * matrixBarycentreMoins;
+*/
     std::vector<Vertex> vertices;
 
     for(const auto vertex: object.get_vertices()) {
@@ -191,8 +220,8 @@ Object Scene::apply_camera_transform(const Object& object) {
 }
 
 Object Scene::cull_and_clip(const Object& object) {
-    Object clip = camera.fov.clipping(object);
-    return camera.culling(clip);
+    Object cull = camera.culling(object);
+    return camera.fov.clipping(cull);
 }
 
 void Scene::draw_object(const Object &object) {
@@ -203,8 +232,6 @@ void Scene::draw_object(const Object &object) {
 
     std::vector<Vertex> vertices = o.get_vertices();
     std::vector<Face> faces = o.get_faces();
-
-    //if(faces.size() == 0) std::cout << "VIDE" << std::endl;
 
     for(uint j=0; j<faces.size(); ++j) {
         Face f = faces[j];
@@ -219,17 +246,17 @@ void Scene::draw_object(const Object &object) {
         Vec4r p3_2 = {v2.point[0], v2.point[1], v2.point[2], 1};
         Vec4r p3_3 = {v3.point[0], v3.point[1], v3.point[2], 1};
 
-        Vec2r p1 = perspective_projection(p3_1, 2);
-        Vec2r p2 = perspective_projection(p3_2, 2);
-        Vec2r p3 = perspective_projection(p3_3, 2);
+        Vec3r p1 = perspective_projection(p3_1, 2);
+        Vec3r p2 = perspective_projection(p3_2, 2);
+        Vec3r p3 = perspective_projection(p3_3, 2);
 
-        Vec2r canvasP1 = viewport_to_canvas(p1);
-        Vec2r canvasP2 = viewport_to_canvas(p2);
-        Vec2r canvasP3 = viewport_to_canvas(p3);
+        Vec3r canvasP1 = viewport_to_canvas(p1);
+        Vec3r canvasP2 = viewport_to_canvas(p2);
+        Vec3r canvasP3 = viewport_to_canvas(p3);
 
-        Vec2i point1 = canvas_to_window(canvasP1);
-        Vec2i point2 = canvas_to_window(canvasP2);
-        Vec2i point3 = canvas_to_window(canvasP3);
+        Vec3r point1 = canvas_to_window(canvasP1);
+        Vec3r point2 = canvas_to_window(canvasP2);
+        Vec3r point3 = canvas_to_window(canvasP3);
 
         if(mode == 0) {
             draw_wireframe_triangle(point1, point2, point3);
@@ -246,16 +273,16 @@ void Scene::draw_object(const Object &object) {
     }
 }
 
-void Scene::draw_wireframe_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const {
+void Scene::draw_wireframe_triangle(const Vec3r &v1, const Vec3r &v2, const Vec3r &v3) const {
     draw_line(v1, v2);
     draw_line(v2, v3);
     draw_line(v3, v1);
 }
 
-void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3, real h0, real h1, real h2, const minwin::Color &color) const{
-    Vec2i p0 = Vec2i(v1);
-    Vec2i p1 = Vec2i(v2);
-    Vec2i p2 = Vec2i(v3);
+void Scene::draw_shaded_triangle(const Vec3r &v1, const Vec3r &v2, const Vec3r &v3, real h0, real h1, real h2, const minwin::Color &color) const{
+    Vec3r p0 = Vec3r(v1);
+    Vec3r p1 = Vec3r(v2);
+    Vec3r p2 = Vec3r(v3);
     
     if(p1[1] < p0[1]) {
         std::swap(p1, p0);
@@ -266,23 +293,27 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
         std::swap(p2, p0);
         std::swap(h2, h0);
     }
-        
+
     if(p2[1] < p1[1]) {
         std::swap(p2, p1);
         std::swap(h2, h1);
     }
 
-    int x0 = p0[0], x1 = p1[0], x2 = p2[0];
-    int y0 = p0[1], y1 = p1[1], y2 = p2[1];
+    int x0 = std::round(p0[0]), x1 = std::round(p1[0]), x2 = std::round(p2[0]);
+    int y0 = std::round(p0[1]), y1 = std::round(p1[1]), y2 = std::round(p2[1]);
+    real z0 = p0[2], z1 = p1[2], z2 = p2[2];
 
-    std::vector<uint> x02 = interpolation(y0, x0, y2, x2);
-    std::vector<real> h02 = interpolation_shaded(y0, h0, y2, h2);
+    std::vector<real> x02 = interpolation(y0, x0, y2, x2);
+    std::vector<real> h02 = interpolation(y0, h0, y2, h2);
+    std::vector<real> z02 = interpolation(y0, z0, y2, z2);
 
-    std::vector<uint> x01 = interpolation(y0, x0, y1, x1);
-    std::vector<real> h01 = interpolation_shaded(y0, h0, y1, h1);
+    std::vector<real> x01 = interpolation(y0, x0, y1, x1);
+    std::vector<real> h01 = interpolation(y0, h0, y1, h1);
+    std::vector<real> z01 = interpolation(y0, z0, y1, z1);
 
-    std::vector<uint> x12 = interpolation(y1, x1, y2, x2);
-    std::vector<real> h12 = interpolation_shaded(y1, h1, y2, h2);
+    std::vector<real> x12 = interpolation(y1, x1, y2, x2);
+    std::vector<real> h12 = interpolation(y1, h1, y2, h2);
+    std::vector<real> z12 = interpolation(y1, z1, y2, z2);
     
     x01.pop_back();
     x01.insert(x01.end(), x12.begin(), x12.end());
@@ -290,8 +321,12 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
     h01.pop_back();
     h01.insert(h01.end(), h12.begin(), h12.end());
 
-    std::vector<uint> x_left, x_right;
+    z01.pop_back();
+    z01.insert(z01.end(), z12.begin(), z12.end());
+
+    std::vector<real> x_left, x_right;
     std::vector<real> h_left, h_right;
+    std::vector<real> z_left, z_right;
     int m = (int)(std::floor(x01.size()/2));
     if(x02[m] < x01[m]) {
         x_left = x02;
@@ -299,6 +334,9 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
 
         h_left = h02;
         h_right = h01;
+
+        z_left = z02;
+        z_right = z01;
     }
     else {
         x_left = x01;
@@ -306,6 +344,9 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
 
         h_left = h01;
         h_right = h02;
+
+        z_left = z01;
+        z_right = z02;
     }
 
     double red = color.red;
@@ -317,7 +358,8 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
         uint x_l = std::round(x_left[diff]);
         uint x_r = std::round(x_right[diff]);
 
-        std::vector<real> h_segment = interpolation_shaded(x_l, h_left[diff], x_r, h_right[diff]);
+        std::vector<real> h_segment = interpolation(x_l, h_left[diff], x_r, h_right[diff]);
+        std::vector<real> z_segment = interpolation(x_l, 1/z_left[diff], x_r, 1/z_right[diff]);
 
         for(uint x = x_l; x <= x_r; ++x) {
             real intens = h_segment[x - x_l];
@@ -326,15 +368,19 @@ void Scene::draw_shaded_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
             c.green = green * intens;
             c.blue = blue * intens;
 
-            windows.put_pixel(x, y, c);
+            real overZ = z_segment[x_r-x];
+            if(overZ > depth_buffer[x][y]){
+                windows.put_pixel(x, y, c);
+                depth_buffer[x][y] = overZ;
+            }
         }
     }
 }
 
-void Scene::draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &v3) const {
-    Vec2i p0 = Vec2i(v1);
-    Vec2i p1 = Vec2i(v2);
-    Vec2i p2 = Vec2i(v3);
+void Scene::draw_filled_triangle(const Vec3r &v1, const Vec3r &v2, const Vec3r &v3) const {
+    Vec3r p0 = Vec3r(v1);
+    Vec3r p1 = Vec3r(v2);
+    Vec3r p2 = Vec3r(v3);
     
     if(p1[1] < p0[1])
         std::swap(p1, p0);
@@ -343,34 +389,55 @@ void Scene::draw_filled_triangle(const Vec2i &v1, const Vec2i &v2, const Vec2i &
     if(p2[1] < p1[1])
         std::swap(p2, p1);
 
-    int x0 = p0[0], x1 = p1[0], x2 = p2[0];
-    int y0 = p0[1], y1 = p1[1], y2 = p2[1];
+    int x0 = std::round(p0[0]), x1 = std::round(p1[0]), x2 = std::round(p2[0]);
+    int y0 = std::round(p0[1]), y1 = std::round(p1[1]), y2 = std::round(p2[1]);
+    real z0 = p0[2], z1 = p1[2], z2 = p2[2];
 
-    std::vector<uint> x02 = interpolation(y0, x0, y2, x2);
-    std::vector<uint> x01 = interpolation(y0, x0, y1, x1);
-    std::vector<uint> x12 = interpolation(y1, x1, y2, x2);
+    std::vector<real> x02 = interpolation(y0, x0, y2, x2);
+    std::vector<real> x01 = interpolation(y0, x0, y1, x1);
+    std::vector<real> x12 = interpolation(y1, x1, y2, x2);
+
+    std::vector<real> z02 = interpolation(y0, z0, y2, z2);
+    std::vector<real> z01 = interpolation(y0, z0, y1, z1);
+    std::vector<real> z12 = interpolation(y1, z1, y2, z2);
     
     x01.pop_back();
-
     x01.insert(x01.end(), x12.begin(), x12.end());
 
-    std::vector<uint> x_left, x_right;
+    z01.pop_back();
+    z01.insert(z01.end(), z12.begin(), z12.end());
+
+    std::vector<real> x_left, x_right;
+    std::vector<real> z_left, z_right;
     int m = (int)(std::floor(x01.size()/2));
     if(x02[m] < x01[m]) {
         x_left = x02;
         x_right = x01;
+
+        z_left = z02;
+        z_right = z01;
     }
     else {
         x_left = x01;
         x_right = x02;
+
+        z_left = z01;
+        z_right = z02;
     }
     
     for(int y = y0; y <= y2; ++y) {
         int diff = y - y0;
         uint x_l = std::round(x_left[diff]);
         uint x_r = std::round(x_right[diff]);
+
+        std::vector<real> z_segment = interpolation(x_l, 1/z_left[diff], x_r, 1/z_right[diff]);
+
         for(uint x = x_l; x <= x_r; ++x) {
-            windows.put_pixel(x, y);
+            real overZ = z_segment[x_r-x];
+            if(overZ > depth_buffer[x][y]){
+                windows.put_pixel(x, y);
+                depth_buffer[x][y] = overZ;
+            }
         }
     }
 }
@@ -381,7 +448,7 @@ real sign(const int value) {
     return 1;
 }
 
-std::vector<real> Scene::interpolation_shaded(int i0, real h0, int i1, real h1) const {
+std::vector<real> Scene::interpolation(int i0, real h0, int i1, real h1) const {
     if(i0 == i1) return {h0};
 
     std::vector<real> listPoint;
@@ -399,26 +466,8 @@ std::vector<real> Scene::interpolation_shaded(int i0, real h0, int i1, real h1) 
     return listPoint;
 }
 
-std::vector<uint> Scene::interpolation(int i0, int d0, int i1, int d1) const {
-    if(i0 == i1) return {(uint)d0};
-
-    std::vector<uint> listPoint;
-
-    int dd = d1 - d0, di = i1 - i0;
-
-    real a = (real)dd / di;
-    real d = d0;
-
-    for(int i = i0; i <= i1; ++i){
-        listPoint.push_back(std::round(d));
-        d = d + a;
-    }
-
-    return listPoint;
-}
-
-void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
-    int x0 = v1[0], y0 = v1[1], x1 = v2[0], y1 = v2[1];
+void Scene::draw_line(const Vec3r &v1, const Vec3r &v2) const {
+    int x0 = std::round(v1[0]), y0 = std::round(v1[1]), x1 = std::round(v2[0]), y1 = std::round(v2[1]);
 
     if(v1 == v2) {
         windows.put_pixel(x0, y0);
@@ -441,7 +490,7 @@ void Scene::draw_line(const Vec2i &v1, const Vec2i &v2) const {
         }
 
         int d = ay - ax;
-        
+       
         for(int x = x0, y = y0; x <= x1; ++x) {
             windows.put_pixel(x, y);
             if(d >= 0) {
@@ -486,7 +535,12 @@ void Scene::quit() { isRunning = false; }
 
 void Scene::changeMode() { mode = (mode+1) %3; }
 
-void Scene::shutdown() { windows.close(); }
+void Scene::shutdown() {
+    for(int i=0; i<600; ++i)
+        delete[] depth_buffer[i];
+    delete[] depth_buffer;
+    windows.close(); 
+}
 
 
 QuitButtonBehavior::QuitButtonBehavior( Scene & scene ) : owner(scene) {}
