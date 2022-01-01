@@ -32,3 +32,26 @@ To clean up the project:
 ```
   make clean
 ```
+
+## Déplacement de la caméra
+
+Translation:
+* Z -> Avancer
+* S -> Reculer
+* Q -> Gauche
+* D -> Droite
+* A -> Monter
+* E -> Descendre
+
+Rotation:
+* I -> Axe X ACW
+* K -> Axe X CW
+* J -> Axe Y ACW
+* L -> Axe Y CW
+* U -> Axe Z ACW
+* O -> Axe Z CW
+
+
+## Problème Actuel
+
+Il y a une déformation des objets avec les rotations de la caméra si on utilise différent axe.

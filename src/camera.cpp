@@ -4,9 +4,10 @@ using namespace aline;
 
 Camera::Camera(real aspectRatio, real focalDistance, real distanceMax, real speedMove, real speedRotation, real speedZoom):
     aspectRatio(aspectRatio), focalDistance(focalDistance), distanceMax(distanceMax),
-    position({}),
+    position({}), rotation({}),
     speedMove(speedMove), speedRotation(speedRotation), speedZoom(speedZoom),
-    fov(focalDistance, distanceMax, aspectRatio, focalDistance), qRotation(1, {}) { }
+    fov(focalDistance, distanceMax, aspectRatio, focalDistance), qRotation(1, {}),
+    rotateAdd({}), moveTab({{}, {}, {}}), rotateTab{false, false, false} { }
 
 
 void Camera::move(int idAxis, const Vec3r &axis) {
@@ -17,9 +18,10 @@ void Camera::move(int idAxis, const Vec3r &axis) {
 }
 
 void Camera::rotate(int idAxis, const Vec3r &axis) {
-    Vec3r isAxisActive = rotateTab[idAxis];
-    if(isAxisActive == Vec3r{}) {
-        rotateTab[idAxis] = axis;
+    bool isAxisActive = rotateTab[idAxis];
+    if(!isAxisActive) {
+        rotateAdd += axis*speedRotation;
+        rotateTab[idAxis] = true;
     }
 }
 
@@ -28,7 +30,8 @@ void Camera::stopMove(int idAxis) {
 }
 
 void Camera::stopRotate(int idAxis) {
-    rotateTab[idAxis] = {};
+    rotateTab[idAxis] = false;
+    rotateAdd[idAxis] = 0;
 }
 
 void Camera::update() {
@@ -37,42 +40,32 @@ void Camera::update() {
 }
 
 void Camera::updateRotation() {
-    real delta = (speedRotation/2)*PI /180;
-    real cos = std::cos(delta);
-    real sin = std::sin(delta);
+    rotation += rotateAdd;
+    real deltaX = (rotation[0]/2)*PI /180 ;
+    real deltaY = (rotation[1]/2)*PI /180 ;
+    real deltaZ = (rotation[2]/2)*PI /180 ;
 
-    if(rotateTab[0] != Vec3r{}) {
-        Vec3r img = rotateTab[0] * Vec3r{sin, 0, 0};
-        Quaternion r(cos, img);
+    Quaternion qX(std::cos(deltaX), {std::sin(deltaX), 0, 0});
+    Quaternion qY(std::cos(deltaY), {0, std::sin(deltaY), 0});
+    Quaternion qZ(std::cos(deltaZ), {0, 0, std::sin(deltaZ)});
 
-        qRotation = qRotation.mult(r);
-    }
+    Quaternion qR = qZ.mult(qY);
+    qR = qR.mult(qX);
 
-    if(rotateTab[1] != Vec3r{}) {
-        Vec3r img = rotateTab[1] * Vec3r{0, sin, 0};
-        Quaternion r(cos, img);
-
-        qRotation = qRotation.mult(r);
-    }
-
-    if(rotateTab[2] != Vec3r{}) {
-        Vec3r img = rotateTab[2] * Vec3r{0, 0, sin};
-        Quaternion r(cos, img);
-
-        qRotation = qRotation.mult(r);
-    }
+    qRotation = qR;
 }
 
 void Camera::updateTranslation() {
     real s = qRotation.s;
     Vec3r v = qRotation.v;
+
     real n = sq_norm(v);
 
     Vec3r depl = moveTab[0] + moveTab[1] + moveTab[2];
 
     real dote = dot(v, depl);
 
-    Vec3r d = ( std::pow(s, 2) - n ) * depl + cross( (2*s*v) , depl) + (2*dote)*v;
+    Vec3r d = ( std::pow(s, 2) - n ) * depl + cross( (2*s*v) , depl) + 2*dote*v;
 
     Vec3r t = speedMove * d;
 

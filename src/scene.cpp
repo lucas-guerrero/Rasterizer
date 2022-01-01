@@ -196,12 +196,6 @@ Object Scene::apply_object_transform(const Object& object) {
 
 Object Scene::apply_camera_transform(const Object& object) {
     Mat44r matrixTransform = camera.transform();
-/*
-    Mat44r matrixBarycentreMoins = object.matrixTranslation(-object.barycentre);
-    Mat44r matrixBarycentre = object.matrixTranslation(object.barycentre);
-
-    matrixTransform = matrixBarycentre * matrixTransform * matrixBarycentreMoins;
-*/
     std::vector<Vertex> vertices;
 
     for(const auto vertex: object.get_vertices()) {
@@ -539,7 +533,7 @@ void Scene::shutdown() {
     for(int i=0; i<600; ++i)
         delete[] depth_buffer[i];
     delete[] depth_buffer;
-    windows.close(); 
+    windows.close();
 }
 
 

@@ -21,10 +21,11 @@ public:
 
     Quaternion qRotation;
 
+    Vec3r rotateAdd;
     Vec3r moveTab[3];
-    Vec3r rotateTab[3];
+    bool rotateTab[3];
 
-    Camera(real aspectRatio, real focalDistance = 2, real distanceMax = 100, real speedMove = 0.5, real speedRotation = 0.5, real speedZoom = 0.0625);
+    Camera(real aspectRatio, real focalDistance = 2, real distanceMax = 100, real speedMove = 0.5, real speedRotation = 1, real speedZoom = 0.0625);
 
     Mat44r transform() const;
 
